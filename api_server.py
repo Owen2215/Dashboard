@@ -141,6 +141,9 @@ NO_CACHE = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "n
 
 @app.get("/")
 def root():
+    index_file = os.path.join(FRONTEND_DIST_DIR, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file, headers=NO_CACHE)
     return RedirectResponse(url="/app", status_code=307, headers=NO_CACHE)
 
 @app.get("/index.html")
