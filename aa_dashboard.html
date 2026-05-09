@@ -1,748 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>CUHKSZ AA Dashboard</title>
-  <link href="https://fonts.cdnfonts.com/css/neue-montreal" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acadmeic Advisor Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
-    /* ── Design Tokens (matches new_theme.html) ─────────────────── */
-    :root {
-      --bg: #e6e6e9;
-      --surface: #f7f7f8;
-      --surface2: #f0f0f2;
-      --border: #dbdbde;
-      --text: #180802;
-      --text2: #5d5552;
-      --text3: #958b86;
-      --accent: #f16f3c;
-      --accent-light: #ffe8df;
-      --accent-dark: #cf5b2f;
-      --purple: #8a5cff;
-      --green: #48c884;
-      --yellow: #ffd027;
-      --radius: 12px;
-      --radius-lg: 20px;
-      --shadow: 0 2px 12px rgba(0,0,0,.07);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body { background: #f4f6f9; color: #1f2937; overflow: hidden; }
+    .app { --sidebar-width: 260px; height: 100vh; width: 100%; overflow: hidden; }
+    .app.sidebar-collapsed { --sidebar-width: 96px; }
+    .sidebar { width: var(--sidebar-width); background: #001c3d; color: white; padding: 18px 16px; position: fixed; left: 0; top: 0; height: 100vh; transition: width 0.3s ease; overflow-y: auto; border-right: 1px solid #003087; z-index: 100; display: flex; flex-direction: column; }
+    .sidebar.collapsed { width: var(--sidebar-width); }
+    .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .sidebar-logo { width: 30px; height: 30px; background: #003087; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .sidebar-title { font-size: 14px; font-weight: 700; color: white; white-space: nowrap; }
+    .sidebar.collapsed .sidebar-title { display: none; }
+    .sidebar.collapsed { padding-left: 16px; padding-right: 16px; }
+    .toggle-btn { background: transparent; border: none; color: #9ca3af; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; margin-left: auto; }
+    .toggle-btn:hover { color: white; }
+    .sidebar-section { margin-bottom: 16px; }
+    .sidebar-section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 8px; padding: 0 4px; }
+    .sidebar.collapsed .sidebar-section-title { display: none; }
+    .nav-item { padding: 9px 10px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #9ca3af; display: flex; align-items: center; gap: 10px; transition: all 0.2s ease; font-size: 13px; font-weight: 500; }
+    .nav-item:hover { background: rgba(0,48,135,0.3); color: white; }
+    .nav-item.active { background: #003087; color: white; font-weight: 600; }
+    .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+    .sidebar.collapsed .nav-item span { display: none; }
+    .nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .user-profile { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 8px; }
+    .user-avatar { width: 34px; height: 34px; background: #003087; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: background 0.2s ease; }
+    .user-avatar:hover { background: #0a2a7a; }
+    .user-avatar svg { width: 20px; height: 20px; }
+    .sidebar.collapsed .user-avatar { width: 36px; height: 36px; }
+    .user-info { display: flex; flex-direction: column; min-width: 0; }
+    .sidebar.collapsed .user-info { display: none; }
+    .user-name { font-size: 13px; font-weight: 600; color: white; }
+    .user-role { font-size: 11px; color: #9ca3af; }
+    .main {
+      margin-left: var(--sidebar-width);
+      width: calc(100% - var(--sidebar-width));
+      padding: 20px 28px;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-width: 0;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Neue Montreal', 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background: var(--surface);
-      color: var(--text);
-      line-height: 1.6;
-      font-size: 15px;
-      min-height: 100vh;
-      margin: 0;
+    .header { display: none; }
+    .search { width: 360px; padding: 11px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; color: #6b7280; }
+    .profile { font-weight: 600; color: #0f2747; }
+    .page { display: none; }
+    .page.active { display: block; animation: pageFadeIn 0.4s ease; }
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* ── Shell ──────────────────────────────────────────────────── */
-    .shell {
-      width: 100%;
-      min-height: 100vh;
+    .card { animation: cardFadeIn 0.5s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.15s; }
+    .card:nth-child(3) { animation-delay: 0.25s; }
+    .card:nth-child(4) { animation-delay: 0.35s; }
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    .app {
-      background: var(--surface);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    .page > h1 {
+      font-size: 42px !important;
+      font-weight: 800 !important;
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      color: #111827;
     }
-
-    /* ── Top Bar ────────────────────────────────────────────────── */
-    .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 16px;
-      padding: 0 28px;
-      height: 76px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .top-left {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .top-left .logo-badge {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
+    .page > h1 b { font-weight: 800 !important; }
+    .subtitle { color: #6b7280; margin-bottom: 24px; line-height: 1.5; font-size: 14px; }
+    .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: nowrap; align-items: center; }
+    select, input, textarea { border: 1px solid #d1d5db; border-radius: 6px; padding: 10px 12px; background: white; font-size: 14px; }
+    select { position: relative; z-index: 100; }
+    select:disabled, input:disabled { background: #f9fafb; color: #6b7280; cursor: not-allowed; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .overview-top-grid { grid-template-columns: minmax(520px, 1.35fr) minmax(420px, 1fr); }
+    .card { background: white; border-radius: 8px; padding: 18px; box-shadow: 0 8px 20px rgba(15, 39, 71, 0.06); border: 1px solid #e5e7eb; margin-bottom: 20px; max-width: 100%; font-weight: 700; }
+    .card h2 { font-size: 20px; margin-bottom: 16px; }
+    .card h3 { font-size: 15px; margin-bottom: 12px; color: #374151; }
+    .metric-value { font-size: 32px; font-weight: 700; margin-bottom: 6px; }
+    .metric-note { color: #6b7280; font-size: 13px; }
+    .chart-box { height: 220px; border-left: 2px solid #9ca3af; border-bottom: 2px solid #9ca3af; display: flex; align-items: flex-end; gap: 24px; padding: 16px 16px 0; margin: 8px 0 24px; background-image: linear-gradient(#eef2f7 1px, transparent 1px); background-size: 100% 48px; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; }
+    .bar { width: 58px; border-radius: 8px 8px 0 0; background: #3b82f6; }
+    .bar.green { background: #3ba64a; }
+    .axis-label { font-size: 12px; color: #6b7280; margin-top: 8px; white-space: nowrap; }
+    .line-chart { height: 240px; border-left: 2px solid #9ca3af; border-bottom: 2px solid #9ca3af; position: relative; background-image: linear-gradient(#eef2f7 1px, transparent 1px), linear-gradient(90deg, #eef2f7 1px, transparent 1px); background-size: 100% 48px, 25% 100%; margin-bottom: 8px; }
+    .trend-line { position: absolute; left: 40px; top: 52px; width: 84%; height: 110px; border-top: 4px solid #3b82f6; transform: rotate(9deg); transform-origin: left center; opacity: 0.75; }
+    .point { position: absolute; width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; }
+    .progress-line { height: 10px; background: #e5e7eb; border-radius: 999px; margin: 12px 0 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #111827; border-radius: 999px; }
+    .course-row { display: grid; grid-template-columns: 160px 1fr; align-items: center; margin: 12px 0; gap: 12px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; table-layout: auto; }
+    tbody tr { background: transparent !important; }
+    th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid #e5e7eb; font-size: 14px; vertical-align: middle; overflow: visible; }
+    th { color: #6b7280; font-weight: 700; font-size: 15px; }
+    thead { position: relative; z-index: 50; }
+    .badge { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; margin-right: 6px; }
+    .red { background: #fee2e2; color: #b91c1c; }
+    .orange-badge { background: #ffedd5; color: #c2410c; }
+    .blue { background: #dbeafe; color: #1d4ed8; }
+    .green-badge { background: #dcfce7; color: #15803d; }
+    .yellow { background: #fef3c7; color: #a16207; }
+    .btn { border: none; background: #1d4ed8; color: white; padding: 8px 12px; border-radius: 9px; cursor: pointer; font-size: 13px; margin-right: 6px; }
+    .btn.secondary { background: #e5e7eb; color: #1f2937; }
+    .risk-matrix { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .risk-card { border-radius: 6px; padding: 16px; border: 1px solid #e5e7eb; background: #f9fafb; }
+    .risk-card strong { display: block; font-size: 18px; margin: 8px 0 6px; }
+    .risk-card p { font-size: 13px; color: #6b7280; line-height: 1.4; }
+    .assistant-box { display: flex; gap: 10px; margin-top: 12px; }
+    .assistant-box input { flex: 1; }
+    .student-layout { display: grid; grid-template-columns: 42% 58%; gap: 22px; }
+    .profile-section { margin-bottom: 18px; }
+    .profile-section ul { padding-left: 20px; line-height: 1.8; color: #4b5563; }
+    .student-mini-line { height: 135px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; padding: 8px; overflow: hidden; }
+    .modal-mask { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); align-items: center; justify-content: center; z-index: 99; }
+    .modal { width: 520px; background: white; border-radius: 8px; padding: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25); }
+    .modal textarea { width: 100%; min-height: 180px; margin: 16px 0; line-height: 1.6; }
+    .logic-list { line-height: 1.9; padding-left: 20px; color: #374151; font-size: 14px; }
+    .sm-row:hover { background: #f0f9ff !important; }
+    .filter-dropdown { position: relative; display: inline-block; margin-right: 28px; }
+    .filter-btn { background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px 12px; font-size: 14px; cursor: pointer; transition: border-color 0.2s; }
+    .filter-btn:hover { border-color: #9ca3af; }
+    .dropdown-content { position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; min-width: 200px; display: none; }
+    .filter-dropdown.show .dropdown-content { display: block !important; }
+    .dropdown-content label { display: flex; align-items: center; padding: 10px 12px; cursor: pointer; font-size: 14px; color: #374151; }
+    .dropdown-content label:hover { background: #f9fafb; }
+    .dropdown-content input[type="checkbox"] { margin-right: 8px; cursor: pointer; }
+    /* Reusable dropdown style (button + menu) for all former <select> inputs */
+    .select-replacement-wrap { position: relative; display: inline-flex; min-width: 80px; width: auto; }
+    .select-replacement-wrap.open { z-index: 800; }
+    .select-replacement-btn {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-    }
-
-    .top-nav {
-      display: flex;
-      gap: 4px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 5px;
-    }
-
-    .top-tab {
-      border: none;
-      background: transparent;
-      color: var(--text2);
-      padding: 8px 20px;
-      border-radius: 999px;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #1f2937;
+      padding: 10px 12px;
       font-size: 14px;
-      font-weight: 500;
+      line-height: 1.2;
       cursor: pointer;
-      font-family: inherit;
-      transition: all .15s ease;
-      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
     }
-
-    .top-tab:hover { color: var(--text); background: rgba(0,0,0,.04); }
-    .top-tab.active { background: var(--accent); color: #fff; font-weight: 600; }
-
-    .top-actions {
+    .select-replacement-btn:hover { border-color: #9ca3af; }
+    .select-replacement-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(29, 78, 216, .18); }
+    .select-replacement-btn .caret { width: 12px; height: 12px; color: #6b7280; flex-shrink: 0; transition: transform .2s ease; }
+    .select-replacement-wrap.open .caret { transform: rotate(180deg); }
+    .select-replacement-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 1200;
+      min-width: 100%;
+      width: max-content;
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .16);
+      padding: 8px;
+    }
+    .select-replacement-wrap.open .select-replacement-menu { display: block; }
+    .select-replacement-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      justify-self: end;
-    }
-
-    .circle-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text2);
-      font-size: 17px;
-      transition: all .15s ease;
-    }
-
-    .circle-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
-    .circle-btn svg { width: 18px; height: 18px; stroke: currentColor; display: block; pointer-events: none; }
-    .circle-btn i { pointer-events: none; display: flex; align-items: center; justify-content: center; }
-
-    /* ── Main Content ───────────────────────────────────────────── */
-    .main {
-      flex: 1;
-      padding: 32px 28px 40px;
-    }
-
-    .page { display: none; }
-    .page.active { display: block; }
-
-    .page-title {
-      font-size: 2.4rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-
-    .page-subtitle {
-      color: var(--text2);
-      font-size: 14px;
-      margin-bottom: 24px;
-      max-width: 680px;
-      line-height: 1.6;
-    }
-
-    /* ── Filters ────────────────────────────────────────────────── */
-    .filters {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .filters select,
-    .filters input {
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 9px 16px;
-      background: var(--surface2);
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--text);
-      outline: none;
-      cursor: pointer;
-    }
-
-    .filters select:focus,
-    .filters input:focus { border-color: var(--accent); }
-
-    .filters input::placeholder { color: var(--text3); }
-
-    /* ── Grid ───────────────────────────────────────────────────── */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    @media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
-
-    /* ── Cards ──────────────────────────────────────────────────── */
-    .card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-
-    .card:last-child { margin-bottom: 0; }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .card-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      color: var(--accent);
-      margin-bottom: 14px;
-    }
-
-    /* ── Metric ─────────────────────────────────────────────────── */
-    .metric-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--text3);
-      margin-bottom: 4px;
-    }
-
-    .metric-value {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.1;
-      margin-bottom: 2px;
-    }
-
-    /* ── Progress ───────────────────────────────────────────────── */
-    .progress-line {
-      height: 8px;
-      background: var(--border);
-      border-radius: 999px;
-      margin: 10px 0 6px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      border-radius: 999px;
-      background: var(--accent);
-      transition: width .4s ease;
-    }
-
-    .progress-fill.purple { background: var(--purple); }
-    .progress-fill.green  { background: var(--green); }
-    .progress-fill.yellow { background: var(--yellow); }
-    .progress-fill.orange { background: var(--accent); }
-
-    .course-row {
-      display: grid;
-      grid-template-columns: 140px 1fr;
-      align-items: center;
-      gap: 12px;
-      margin: 10px 0;
-      font-size: 13px;
-      color: var(--text2);
-    }
-
-    /* ── Bar Chart ──────────────────────────────────────────────── */
-    .chart-box {
-      height: 200px;
-      border-left: 2px solid var(--border);
-      border-bottom: 2px solid var(--border);
-      display: flex;
-      align-items: flex-end;
-      gap: 20px;
-      padding: 12px 16px 0;
-      margin: 14px 0 20px;
-      background-image: linear-gradient(var(--bg) 1px, transparent 1px);
-      background-size: 100% 50px;
-    }
-
-    .bar-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      height: 100%;
-      flex: 1;
-    }
-
-    .bar {
-      width: 100%;
-      max-width: 52px;
-      border-radius: 6px 6px 0 0;
-      background: var(--purple);
-      transition: height .4s ease;
-    }
-
-    .bar.orange { background: var(--accent); }
-    .bar.green  { background: var(--green); }
-
-    .axis-label {
-      font-size: 11px;
-      color: var(--text3);
-      margin-top: 6px;
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    /* ── Line Chart ─────────────────────────────────────────────── */
-    .gpa-trend-svg { display: block; margin-bottom: 8px; }
-
-    /* ── Table ──────────────────────────────────────────────────── */
-    .aa-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .aa-table th, .aa-table td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13.5px;
-      vertical-align: middle;
-    }
-
-    .aa-table th {
-      color: var(--text3);
-      font-weight: 700;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .aa-table tbody tr:hover { background: rgba(241,111,60,.04); }
-    .aa-table tbody tr:last-child td { border-bottom: none; }
-
-    /* ── Badges ─────────────────────────────────────────────────── */
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-      margin-right: 4px;
-    }
-
-    .badge-red    { background: #fee2e2; color: #b91c1c; }
-    .badge-orange { background: #ffedd5; color: #c2410c; }
-    .badge-yellow { background: #fef3c7; color: #a16207; }
-    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
-    .badge-green  { background: #dcfce7; color: #15803d; }
-    .badge-gray   { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
-
-    /* ── Buttons ────────────────────────────────────────────────── */
-    .btn {
-      border: none;
-      background: var(--accent);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      margin-right: 6px;
-      transition: all .15s ease;
-    }
-
-    .btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
-    .btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn.secondary:hover { background: var(--border); transform: translateY(-1px); }
-
-    /* ── Risk Matrix ────────────────────────────────────────────── */
-    .risk-matrix {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 0;
-    }
-
-    @media (max-width: 900px) { .risk-matrix { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 600px) { .risk-matrix { grid-template-columns: 1fr; } }
-
-    .risk-card {
-      border-radius: var(--radius);
-      padding: 18px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .risk-card strong {
-      display: block;
-      font-size: 1.6rem;
-      font-weight: 800;
-      margin: 8px 0 4px;
-      color: var(--text);
-    }
-
-    .risk-card p { font-size: 13px; color: var(--text2); line-height: 1.4; }
-
-    /* ── Student Layout ─────────────────────────────────────────── */
-    .student-layout {
-      display: grid;
-      grid-template-columns: 44% 56%;
-      gap: 20px;
-    }
-
-    @media (max-width: 1100px) { .student-layout { grid-template-columns: 1fr; } }
-
-    .mini-chart {
-      height: 130px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
       padding: 8px;
-      overflow: hidden;
-      margin-bottom: 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #374151;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
     }
-
-    .profile-section { margin-bottom: 16px; }
-    .profile-section h3 { font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
-    .profile-section ul { padding-left: 18px; color: var(--text2); font-size: 13.5px; line-height: 1.9; }
-
-    textarea {
-      width: 100%;
-      min-height: 80px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 14px;
-      font-family: inherit;
-      font-size: 13.5px;
-      color: var(--text);
-      background: var(--surface);
-      resize: vertical;
-      outline: none;
+    .select-replacement-item:hover { background: #f3f4f6; }
+    .select-replacement-item input { width: 14px; height: 14px; margin: 0; pointer-events: none; }
+    select.select-replacement-source { display: none !important; }
+    @media (max-width: 1400px) {
+      .overview-top-grid { grid-template-columns: minmax(460px, 1.25fr) minmax(360px, 1fr); }
     }
-
-    textarea:focus { border-color: var(--accent); }
-
-    /* ── AI Rule Assistant ──────────────────────────────────────── */
-    .assistant-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
+    @media (max-width: 1100px) {
+      .grid-2, .overview-top-grid, .student-layout, .risk-matrix { grid-template-columns: 1fr; }
+      .main { padding: 18px; }
     }
-
-    .assistant-row input {
-      flex: 1;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-family: inherit;
-      font-size: 13.5px;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-    }
-
-    .assistant-row input:focus { border-color: var(--accent); }
-
-    .logic-list {
-      list-style: decimal;
-      padding-left: 20px;
-      color: var(--text2);
-      font-size: 13.5px;
-      line-height: 2;
-    }
-
-    /* ── Stat Bar (overview summary) ────────────────────────────── */
-    .stat-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    @media (max-width: 900px) { .stat-row { grid-template-columns: 1fr 1fr; } }
-
-    .stat-cell {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .stat-cell .stat-num {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-    }
-
-    .stat-cell .stat-num.orange { color: var(--accent); }
-    .stat-cell .stat-num.purple { color: var(--purple); }
-    .stat-cell .stat-num.green  { color: var(--green); }
-
-    .stat-cell .stat-desc { font-size: 12px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-
-    /* ── Profile Panel ──────────────────────────────────────────── */
-    #profilePanel { display: none; }
-
-    /* ── Modal ──────────────────────────────────────────────────── */
-    .modal-mask {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(24,8,2,.45);
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal {
-      width: 520px;
-      max-width: 95vw;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.18);
-    }
-
-    .modal h2 { font-size: 18px; margin-bottom: 4px; }
-    .modal .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
-    .modal textarea { margin-bottom: 16px; }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-    /* ── Divider ────────────────────────────────────────────────── */
-    .divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-    /* ── Section label ──────────────────────────────────────────── */
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text3);
-      margin-bottom: 12px;
-    }
-
   </style>
 </head>
 <body>
-
-<div class="shell">
+  <script>
+    (function enforceAdvisorSession() {
+      var SESSION_KEY = 'cuhksz_user_session';
+      var loginUrl = '/app';
+      var raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          role: 'advisor',
+          name: 'Prof Admin',
+          email: 'admin@cuhksz.edu.cn'
+        }));
+        return;
+      }
+      try {
+        var session = JSON.parse(raw);
+        if (!session || session.role !== 'advisor') {
+          window.location.replace(loginUrl);
+        }
+      } catch (err) {
+        window.location.replace(loginUrl);
+      }
+    })();
+  </script>
   <div class="app">
-
-    <!-- ── Top Bar ──────────────────────────────────────────────── -->
-    <div class="topbar">
-      <div class="top-left">
-        <span class="logo-badge">AA</span>
-        CUHKSZ AA Dashboard
+    <aside class="sidebar" id="sidebar">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 28px;">
+        <div class="sidebar-logo">AA</div>
+        <div class="sidebar-title">CUHKSZ AA</div>
+        <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
       </div>
-      <nav class="top-nav">
-        <button class="top-tab active" onclick="showPage('overview', this)">Academic Overview</button>
-        <button class="top-tab" onclick="showPage('risk', this)">Risk Snapshot</button>
-        <button class="top-tab" onclick="showPage('students', this)">Student Management</button>
-      </nav>
-      <div class="top-actions">
-        <button class="circle-btn" title="Settings"><i data-lucide="settings"></i></button>
-        <button class="circle-btn" title="Notifications"><i data-lucide="bell"></i></button>
-        <button class="circle-btn" title="Sign out" onclick="signOut()"><i data-lucide="user-round"></i></button>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">ADVISING</div>
+        <div class="nav-item active" onclick="showPage('overview', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showPage('risk', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05l-8.47-14.14a2 2 0 0 0-3.41 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Risk Alert</span>
+        </div>
+        <div class="nav-item" onclick="showPage('student', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Manage Students</span>
+        </div>
       </div>
-    </div>
 
-    <!-- ── Main ─────────────────────────────────────────────────── -->
-    <div class="main">
-
-      <!-- ══════════════════════════════════════════════════════════
-           PAGE: ACADEMIC OVERVIEW
-      ══════════════════════════════════════════════════════════════ -->
-      <section id="overview" class="page active">
-        <h1 class="page-title">Academic Overview</h1>
-        <p class="page-subtitle">A quick summary of the overall academic status and advising engagement of your advisees.</p>
-
-        <!-- Stat summary row -->
-        <div class="stat-row">
-          <div class="stat-cell">
-            <span class="stat-num orange">48</span>
-            <span class="stat-desc">Total Advisees</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-num purple">3.14</span>
-            <span class="stat-desc">Avg GPA</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-num green">71%</span>
-            <span class="stat-desc">Avg Credit Completion</span>
-          </div>
-          <div class="stat-cell">
-            <span class="stat-num" style="color:#b91c1c">14</span>
-            <span class="stat-desc">High-Risk Students</span>
-          </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">SETTINGS</div>
+        <div class="nav-item" onclick="alert('Settings coming soon')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
+          </svg>
+          <span>Settings</span>
         </div>
+      </div>
 
-        <div class="filters">
-          <select disabled><option>Global Filter (to be connected with data source)</option></select>
-        </div>
-
-        <div class="grid-2">
-          <!-- GPA Performance -->
-          <div class="card">
-            <div class="card-eyebrow">GPA Performance</div>
-            <div class="card-title">GPA Distribution</div>
-            <div class="chart-box">
-              <div class="bar-wrap"><div class="bar" style="height:2%"></div><div class="axis-label">&lt;2.0</div></div>
-              <div class="bar-wrap"><div class="bar" style="height:20%"></div><div class="axis-label">2.0–2.5</div></div>
-              <div class="bar-wrap"><div class="bar" style="height:48%"></div><div class="axis-label">2.5–3.0</div></div>
-              <div class="bar-wrap"><div class="bar" style="height:68%"></div><div class="axis-label">3.0–3.5</div></div>
-              <div class="bar-wrap"><div class="bar" style="height:92%"></div><div class="axis-label">≥3.5</div></div>
-            </div>
-            <div class="card-title" style="margin-bottom:10px">GPA Trend (last 4 semesters)</div>
-            <svg class="gpa-trend-svg" viewBox="0 0 500 200" width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
-              <!-- grid lines -->
-              <line x1="48" y1="20"  x2="490" y2="20"  stroke="#e5e7eb" stroke-width="1"/>
-              <line x1="48" y1="60"  x2="490" y2="60"  stroke="#e5e7eb" stroke-width="1"/>
-              <line x1="48" y1="100" x2="490" y2="100" stroke="#e5e7eb" stroke-width="1"/>
-              <line x1="48" y1="140" x2="490" y2="140" stroke="#e5e7eb" stroke-width="1"/>
-              <!-- axes -->
-              <line x1="48" y1="20" x2="48"  y2="165" stroke="#d1d5db" stroke-width="1.5"/>
-              <line x1="48" y1="165" x2="490" y2="165" stroke="#d1d5db" stroke-width="1.5"/>
-              <!-- y-axis labels -->
-              <text x="38" y="24"  text-anchor="end" font-size="11" fill="#958b86">3.5</text>
-              <text x="38" y="64"  text-anchor="end" font-size="11" fill="#958b86">3.2</text>
-              <text x="38" y="104" text-anchor="end" font-size="11" fill="#958b86">2.9</text>
-              <text x="38" y="144" text-anchor="end" font-size="11" fill="#958b86">2.6</text>
-              <!-- trend line -->
-              <polyline points="80,38 213,68 346,98 468,128"
-                fill="none" stroke="#6b8cfa" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round"/>
-              <!-- dots -->
-              <circle cx="80"  cy="38"  r="6" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-              <circle cx="213" cy="68"  r="6" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-              <circle cx="346" cy="98"  r="6" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-              <circle cx="468" cy="128" r="6" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-              <!-- x-axis labels -->
-              <text x="80"  y="182" text-anchor="middle" font-size="11" fill="#958b86">2024 Spring</text>
-              <text x="213" y="182" text-anchor="middle" font-size="11" fill="#958b86">2024 Fall</text>
-              <text x="346" y="182" text-anchor="middle" font-size="11" fill="#958b86">2025 Spring</text>
-              <text x="468" y="182" text-anchor="middle" font-size="11" fill="#958b86">2025 Fall</text>
+      <div class="sidebar-footer">
+        <div class="user-profile" onclick="openProfileSettings()">
+          <div class="user-avatar" id="userAvatar">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
           </div>
+          <div class="user-info">
+            <div class="user-name" id="displayUserName">Prof. Paolo</div>
+            <div class="user-role">Admin Manager</div>
+          </div>
+        </div>
+        <div class="nav-item" onclick="logout()">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Log out</span>
+        </div>
+      </div>
+    </aside>
+2222
+    <main class="main">
 
-          <!-- Progress Overview -->
-          <div class="card">
-            <div class="card-eyebrow">Progress Overview</div>
-            <div class="card-title">Completion Rate Distribution</div>
-            <div class="chart-box">
-              <div class="bar-wrap"><div class="bar green" style="height:2%"></div><div class="axis-label">0–25%</div></div>
-              <div class="bar-wrap"><div class="bar green" style="height:5%"></div><div class="axis-label">25–50%</div></div>
-              <div class="bar-wrap"><div class="bar green" style="height:90%"></div><div class="axis-label">50–75%</div></div>
-              <div class="bar-wrap"><div class="bar green" style="height:28%"></div><div class="axis-label">75–99%</div></div>
-              <div class="bar-wrap"><div class="bar green" style="height:4%"></div><div class="axis-label">100%+</div></div>
+      <section id="overview" class="page active">
+        <h1><b>Overview</b></h1>
+        <p class="subtitle">A quick summary of the overall academic status and advising engagement of advisees.</p>
+
+        <div class="filters" style="margin-bottom:22px;">
+          <div class="filter-dropdown">
+            <button class="filter-btn">Year: All</button>
+            <div id="yearDropdown" class="dropdown-content" style="display:none;">
+              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('year')"> Select All</label>
+              <label><input type="checkbox" value="1" onchange="applyOverviewFilter()"> Year 1</label>
+              <label><input type="checkbox" value="2" onchange="applyOverviewFilter()"> Year 2</label>
+              <label><input type="checkbox" value="3" onchange="applyOverviewFilter()"> Year 3</label>
+              <label><input type="checkbox" value="4" onchange="applyOverviewFilter()"> Year 4</label>
             </div>
-            <div class="divider"></div>
-            <div class="metric-label">Avg Completion Rate</div>
-            <div class="metric-value">71%</div>
-            <div class="progress-line"><div class="progress-fill" style="width:71%"></div></div>
-            <div class="metric-label" style="margin-top:4px">Avg 85 / 120 credits completed</div>
-            <div style="height:16px"></div>
-            <div class="metric-label">Course Type Completion</div>
-            <div class="course-row"><span>Major Required</span><div class="progress-line"><div class="progress-fill orange" style="width:65%"></div></div></div>
-            <div class="course-row"><span>Electives</span><div class="progress-line"><div class="progress-fill yellow" style="width:72%"></div></div></div>
-            <div class="course-row"><span>General Education</span><div class="progress-line"><div class="progress-fill green" style="width:80%"></div></div></div>
+          </div>
+
+          <div class="filter-dropdown">
+            <button class="filter-btn">Major: All</button>
+            <div id="majorDropdown" class="dropdown-content" style="display:none;">
+              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('major')"> Select All</label>
+              <label><input type="checkbox" value="finmath" onchange="applyOverviewFilter()"> Financial Mathematics</label>
+              <label><input type="checkbox" value="cs" onchange="applyOverviewFilter()"> Computer Science</label>
+              <label><input type="checkbox" value="econ" onchange="applyOverviewFilter()"> Economics</label>
+            </div>
+          </div>
+
+          <div class="filter-dropdown">
+            <button class="filter-btn">School: All</button>
+            <div id="schoolDropdown" class="dropdown-content" style="display:none;">
+              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('school')"> Select All</label>
+              <label><input type="checkbox" value="data-science" onchange="applyOverviewFilter()"> School of Data Science</label>
+              <label><input type="checkbox" value="management-economics" onchange="applyOverviewFilter()"> School of Management and Economics</label>
+              <label><input type="checkbox" value="humanities-science" onchange="applyOverviewFilter()"> School of Humanities and Science</label>
+            </div>
           </div>
         </div>
 
-        <!-- Communication Overview -->
-        <div class="card">
-          <div class="card-eyebrow">Advising Communication</div>
-          <div class="card-title" style="margin-bottom:16px">Contact Coverage &amp; Frequency</div>
-          <div class="grid-2" style="margin-bottom:0">
-            <div>
-              <div class="metric-label">Communication Coverage</div>
-              <div class="metric-value">82%</div>
-              <div class="progress-line"><div class="progress-fill" style="width:82%"></div></div>
-              <div class="metric-label">Students contacted in last 90 days</div>
+        <div class="grid-2 overview-top-grid">
+          <!-- GPA Performance Card -->
+          <div class="card">
+            <h2>GPA Performance</h2>
+            <h3>GPA Distribution</h3>
+            <div style="position:relative; height:200px; margin-bottom:8px;">
+              <canvas id="gpaDistChart" role="img" aria-label="Bar chart showing GPA distribution across ranges from below 2.0 to 3.5 and above">GPA distribution: &lt;2.0: 2 students, 2.0–2.5: 8 students, 2.5–3.0: 12 students, 3.0–3.5: 15 students, ≥3.5: 18 students.</canvas>
             </div>
+            <div style="height:22px;"></div>
+            <h3>GPA Trend</h3>
+            <div style="position:relative; height:160px; margin-bottom:4px;">
+              <canvas id="gpaTrendChart" role="img" aria-label="Line chart showing average GPA trend across 4 semesters from 2024 Spring to 2025 Fall, showing a slight decline">GPA trend: 2024 Spring 3.21, 2024 Fall 3.14, 2025 Spring 3.07, 2025 Fall 2.98.</canvas>
+            </div>
+          </div>
+
+          <!-- Progress Overview Card -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <h2 style="margin-bottom:0;">Progress Overview</h2>
+              <div style="display:flex; gap:6px;">
+                <button id="btnBar" class="btn" style="padding:5px 10px; font-size:12px;" onclick="switchProgressChart('bar')">Bar</button>
+                <button id="btnPie" class="btn secondary" style="padding:5px 10px; font-size:12px;" onclick="switchProgressChart('pie')">Pie</button>
+              </div>
+            </div>
+
+            <!-- Overall Avg Rate -->
+            <div style="display:flex; align-items:baseline; gap:10px; margin:14px 0 4px;">
+              <div>
+                <div style="font-size:11px; color:#9ca3af; letter-spacing:.05em; text-transform:uppercase; margin-bottom:3px;">Avg Completion Rate</div>
+                <div style="font-size:34px; font-weight:700; color:#1f2937; line-height:1;">71%</div>
+                <div style="font-size:12px; color:#6b7280; margin-top:3px;">Avg 85 / 120 credits completed</div>
+              </div>
+              <div style="flex:1; margin-left:12px;">
+                <div class="progress-line" style="height:8px; margin-bottom:0;"><div class="progress-fill" style="width:71%; background:#1d4ed8;"></div></div>
+              </div>
+            </div>
+
+            <div style="height:1px; background:#f3f4f6; margin:14px 0;"></div>
+            <h3 style="margin-bottom:10px;">Completion Distribution by Category</h3>
+
+            <!-- Chart toggle area -->
+            <div id="progressBarView" style="position:relative; height:210px;">
+              <canvas id="progressBarChart" role="img" aria-label="Bar chart showing course completion rates by category">Completion: Major Required 50% of 36cr, Electives 72% of 24cr, Univ. Core 80% of 20cr, Overall 71% of 120cr.</canvas>
+            </div>
+            <div id="progressPieView" style="position:relative; height:210px; display:none;">
+              <canvas id="progressPieChart" role="img" aria-label="Pie chart showing share of completed credits by course category">Completed credits: Major Required 18cr, Electives 17cr, Univ. Core 16cr, Free Elective 34cr, Remaining 35cr.</canvas>
+            </div>
+
+            <!-- Per-category detail rows -->
+            <div style="margin-top:14px;">
+              <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
+                <span style="color:#374151; font-weight:500;">Major Required</span>
+                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:50%; background:#1d4ed8;"></div></div>
+                <span style="color:#1d4ed8; font-weight:600; text-align:right;">50% <span style="color:#9ca3af; font-weight:400;">(18/36cr)</span></span>
+              </div>
+              <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
+                <span style="color:#374151; font-weight:500;">Electives</span>
+                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:72%; background:#3b82f6;"></div></div>
+                <span style="color:#3b82f6; font-weight:600; text-align:right;">72% <span style="color:#9ca3af; font-weight:400;">(17/24cr)</span></span>
+              </div>
+              <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
+                <span style="color:#374151; font-weight:500;">University Core Course</span>
+                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:80%; background:#1e40af;"></div></div>
+                <span style="color:#1e40af; font-weight:600; text-align:right;">80% <span style="color:#9ca3af; font-weight:400;">(16/20cr)</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Communication Overview Full-width -->
+        <div class="card">
+          <h2>Communication Overview</h2>
+          <div style="display:grid; grid-template-columns:260px 1fr; gap:32px; align-items:start;">
+            <!-- Left: Coverage metric -->
             <div>
-              <div class="metric-label">Contact Frequency Distribution</div>
-              <div style="height:8px"></div>
-              <div class="course-row"><span>0 contacts</span><div class="progress-line"><div class="progress-fill" style="width:18%;background:#b91c1c"></div></div></div>
-              <div class="course-row"><span>1–2 contacts</span><div class="progress-line"><div class="progress-fill yellow" style="width:54%"></div></div></div>
-              <div class="course-row"><span>3+ contacts</span><div class="progress-line"><div class="progress-fill green" style="width:28%"></div></div></div>
+              <div style="font-size:11px; color:#9ca3af; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px;">Communication Coverage</div>
+              <div style="font-size:40px; font-weight:700; color:#1d4ed8; line-height:1.1;">82%</div>
+              <div class="progress-line" style="height:8px; margin:10px 0 6px;"><div class="progress-fill" style="width:82%; background:#1d4ed8;"></div></div>
+              <div style="font-size:13px; color:#6b7280;">45 / 55 students contacted recently</div>
+            </div>
+            <!-- Right: Frequency distribution with proportions -->
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:12px;">Contact Frequency Distribution <span style="font-weight:400; color:#9ca3af;">(% of 55 advisees)</span></div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                    <span style="color:#374151;">No contact</span>
+                    <span style="color:#ef4444; font-weight:600;">18% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">10 students</span></span>
+                  </div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:18%; background:#ef4444;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                    <span style="color:#374151;">1–2 contacts</span>
+                    <span style="color:#3b82f6; font-weight:600;">51% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">28 students</span></span>
+                  </div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:51%; background:#3b82f6;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                    <span style="color:#374151;">3+ contacts</span>
+                    <span style="color:#1d4ed8; font-weight:600;">31% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">17 students</span></span>
+                  </div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:31%; background:#1d4ed8;"></div></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-
-      <!-- ══════════════════════════════════════════════════════════
-           PAGE: RISK SNAPSHOT
-      ══════════════════════════════════════════════════════════════ -->
       <section id="risk" class="page">
-        <h1 class="page-title">Risk Snapshot</h1>
-        <p class="page-subtitle">The early-warning centre helps identify students who may require support and take timely action.</p>
+        <h1>Risk Snapshot</h1>
+        <p class="subtitle">The early-warning centre helps advisors identify students who may require support and take timely action.</p>
 
-        <!-- Risk matrix -->
+        <!-- High Risk Students (always on top) -->
+        <div class="card" style="border-left: 4px solid #b91c1c;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div>
+              <h2 style="margin-bottom:2px;">High Risk Students</h2>
+              <p style="font-size:13px; color:#6b7280; margin:0;">Students identified through multiple combined risk signals — immediate attention recommended.</p>
+            </div>
+            <span class="badge red" style="font-size:14px; padding:6px 14px;">14 Students</span>
+          </div>
+          <!-- Fixed-height scrollable table: shows ~2 rows, scroll for more -->
+          <div style="max-height:160px; overflow-y:scroll; border:1px solid #fecaca; border-radius:8px;">
+            <table id="highRiskTable" style="margin-bottom:0;">
+              <thead style="position:sticky; top:0; background:#fff5f5; z-index:1;">
+                <tr><th>Student</th><th>Risk Score</th><th>Reason</th><th>Last Contact</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr data-type="gpa contact" data-category="high" data-score="92">
+                  <td><strong>Amy Chen</strong></td>
+                  <td><span class="badge red">92</span></td>
+                  <td>GPA drop + no contact</td>
+                  <td>142 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Amy Chen','high')">View Detail</button><button class="btn" onclick="openModal('Amy Chen','GPA drop and no recent contact')">Send Email</button></td>
+                </tr>
+                <tr data-type="credit final" data-category="high" data-score="88">
+                  <td><strong>Tom Lee</strong></td>
+                  <td><span class="badge red">88</span></td>
+                  <td>Credit delay + final-year urgency</td>
+                  <td>96 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Tom Lee','high')">View Detail</button><button class="btn" onclick="openModal('Tom Lee','credit progress delay and final-year urgency')">Send Email</button></td>
+                </tr>
+                <tr data-type="gpa" data-category="high" data-score="83" style="display:none;">
+                  <td><strong>Jack Wong</strong></td>
+                  <td><span class="badge red">83</span></td>
+                  <td>GPA drop</td>
+                  <td>120 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Jack Wong','high')">View Detail</button><button class="btn" onclick="openModal('Jack Wong','GPA decline')">Send Email</button></td>
+                </tr>
+                <tr data-type="contact" data-category="high" data-score="78" style="display:none;">
+                  <td><strong>Linda Zhang</strong></td>
+                  <td><span class="badge orange-badge">78</span></td>
+                  <td>No recent advisor contact</td>
+                  <td>135 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Linda Zhang','high')">View Detail</button><button class="btn" onclick="openModal('Linda Zhang','no recent advisor contact')">Send Email</button></td>
+                </tr>
+                <tr data-type="credit" data-category="high" data-score="74" style="display:none;">
+                  <td><strong>Kevin Ng</strong></td>
+                  <td><span class="badge orange-badge">74</span></td>
+                  <td>Credit delay</td>
+                  <td>58 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Kevin Ng','high')">View Detail</button><button class="btn" onclick="openModal('Kevin Ng','credit delay')">Send Email</button></td>
+                </tr>
+                <tr data-type="gpa contact" data-category="high" data-score="71" style="display:none;">
+                  <td><strong>Sarah Liu</strong></td>
+                  <td><span class="badge orange-badge">71</span></td>
+                  <td>GPA drop + no contact</td>
+                  <td>88 days ago</td>
+                  <td><button class="btn secondary" onclick="openProfile('Sarah Liu','high')">View Detail</button><button class="btn" onclick="openModal('Sarah Liu','GPA drop and no recent contact')">Send Email</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:12px; color:#9ca3af; margin-top:6px; text-align:right;">Scroll to view all 14 students</p>
+        </div>
+
+        <!-- Risk Indicator Matrix — clickable -->
         <div class="card">
-          <div class="card-eyebrow">Risk Indicator Matrix</div>
-          <div class="risk-matrix">
-            <div class="risk-card">
-              <span class="badge badge-red">High Risk</span>
-              <strong>14</strong>
-              <p>Multiple combined signals: GPA drop, credit delay, no contact.</p>
+          <h2 style="margin-bottom:4px;">Risk Indicator Matrix</h2>
+          <p style="font-size:13px; color:#6b7280; margin-bottom:14px;">Click a category to view the corresponding students below.</p>
+          <div class="risk-matrix" style="grid-template-columns: repeat(3,1fr);">
+            <div class="risk-card" id="rc-credit" onclick="filterMatrix('credit')" style="cursor:pointer; border:2px solid #fed7aa; transition:box-shadow .15s;">
+              <span class="badge orange-badge">Credit Alert</span><strong>9 Students</strong><p>Students falling behind expected credit progress.</p>
             </div>
-            <div class="risk-card">
-              <span class="badge badge-orange">Credit Alert</span>
-              <strong>9</strong>
-              <p>Credit progress significantly behind graduation timeline.</p>
+            <div class="risk-card" id="rc-gpa" onclick="filterMatrix('gpa')" style="cursor:pointer; border:2px solid #fde68a; transition:box-shadow .15s;">
+              <span class="badge yellow">GPA Drop</span><strong>11 Students</strong><p>Students with significant GPA decline.</p>
             </div>
-            <div class="risk-card">
-              <span class="badge badge-yellow">GPA Drop</span>
-              <strong>11</strong>
-              <p>Significant semester-on-semester GPA decline detected.</p>
-            </div>
-            <div class="risk-card">
-              <span class="badge badge-blue">No Contact</span>
-              <strong>18</strong>
-              <p>No advisor contact recorded in the last 90 days.</p>
+            <div class="risk-card" id="rc-contact" onclick="filterMatrix('contact')" style="cursor:pointer; border:2px solid #bfdbfe; transition:box-shadow .15s;">
+              <span class="badge blue">No Contact</span><strong>18 Students</strong><p>Students who have not met their advisor recently.</p>
             </div>
           </div>
         </div>
 
-        <!-- Priority table -->
-        <div class="card">
-          <div class="card-eyebrow">Priority Students</div>
-          <div class="card-title" style="margin-bottom:6px">Ranked by Dynamic Risk Score</div>
-          <p class="page-subtitle" style="margin-bottom:14px">Default sort by risk score. Filter by primary risk reason below.</p>
+        <!-- Priority Students table (filtered by matrix click or dropdown) -->
+        <div class="card" id="priorityCard">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <h2 style="margin-bottom:0;" id="priorityCardTitle">Priority Students Ranked by Dynamic Risk Score</h2>
+            <button class="btn secondary" id="clearFilterBtn" onclick="filterMatrix('all')" style="display:none; font-size:12px; padding:5px 10px;">Clear filter</button>
+          </div>
+          <p class="subtitle" style="margin-bottom:12px">Default sorting is based on the dynamic risk score. Advisors can filter the table by major risk reason.</p>
           <div class="filters">
             <select id="reasonFilter" onchange="filterReason()">
               <option value="all">Filter by Reason: All</option>
@@ -752,395 +552,1263 @@
               <option value="final">Final-year Urgency</option>
             </select>
           </div>
-          <table id="riskTable" class="aa-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Risk Score</th>
-                <th>Primary Reason</th>
-                <th>Last Contact</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+          <table id="riskTable">
+            <thead><tr><th>Student</th><th>Risk Score</th><th>Reason</th><th>Last Contact</th><th>Action</th></tr></thead>
             <tbody>
-              <tr data-type="gpa contact">
-                <td><strong>Amy Chen</strong></td>
-                <td><span class="badge badge-red">92</span></td>
-                <td>GPA drop + no contact</td>
-                <td>142 days ago</td>
-                <td>
-                  <button class="btn secondary" onclick="openProfile('Amy Chen')">Profile</button>
-                  <button class="btn" onclick="openModal('Amy Chen','GPA drop and no recent contact')">Take Action</button>
-                </td>
+              <tr data-type="gpa contact" data-category="high gpa contact">
+                <td>Amy Chen</td><td><span class="badge red">92</span></td><td>GPA drop + no contact</td><td>142 days ago</td>
+                <td><button class="btn secondary" onclick="openProfile('Amy Chen','risk')">View Detail</button><button class="btn" onclick="openModal('Amy Chen','GPA drop and no recent contact')">Send Email</button></td>
               </tr>
-              <tr data-type="credit final">
-                <td><strong>Tom Lee</strong></td>
-                <td><span class="badge badge-orange">88</span></td>
-                <td>Credit delay + final-year urgency</td>
-                <td>96 days ago</td>
-                <td>
-                  <button class="btn secondary" onclick="openProfile('Tom Lee')">Profile</button>
-                  <button class="btn" onclick="openModal('Tom Lee','credit progress delay')">Take Action</button>
-                </td>
+              <tr data-type="credit final" data-category="high credit">
+                <td>Tom Lee</td><td><span class="badge red">88</span></td><td>Credit delay + final-year urgency</td><td>96 days ago</td>
+                <td><button class="btn secondary" onclick="openProfile('Tom Lee','risk')">View Detail</button><button class="btn" onclick="openModal('Tom Lee','credit progress delay')">Send Email</button></td>
               </tr>
-              <tr data-type="gpa">
-                <td><strong>Jack Wong</strong></td>
-                <td><span class="badge badge-orange">83</span></td>
-                <td>GPA drop</td>
-                <td>120 days ago</td>
-                <td>
-                  <button class="btn secondary" onclick="openProfile('Jack Wong')">Profile</button>
-                  <button class="btn" onclick="openModal('Jack Wong','GPA decline')">Take Action</button>
-                </td>
+              <tr data-type="gpa" data-category="gpa">
+                <td>Jack Wong</td><td><span class="badge orange-badge">83</span></td><td>GPA drop</td><td>120 days ago</td>
+                <td><button class="btn secondary" onclick="openProfile('Jack Wong','risk')">View Detail</button><button class="btn" onclick="openModal('Jack Wong','GPA decline')">Send Email</button></td>
               </tr>
-              <tr data-type="contact">
-                <td><strong>Linda Zhang</strong></td>
-                <td><span class="badge badge-yellow">76</span></td>
-                <td>No recent advisor contact</td>
-                <td>135 days ago</td>
-                <td>
-                  <button class="btn secondary" onclick="openProfile('Linda Zhang')">Profile</button>
-                  <button class="btn" onclick="openModal('Linda Zhang','no recent advisor contact')">Take Action</button>
-                </td>
+              <tr data-type="contact" data-category="contact">
+                <td>Linda Zhang</td><td><span class="badge yellow">76</span></td><td>No recent advisor contact</td><td>135 days ago</td>
+                <td><button class="btn secondary" onclick="openProfile('Linda Zhang','risk')">View Detail</button><button class="btn" onclick="openModal('Linda Zhang','no recent advisor contact')">Send Email</button></td>
+              </tr>
+              <tr data-type="credit" data-category="credit">
+                <td>Kevin Ng</td><td><span class="badge yellow">71</span></td><td>Credit delay</td><td>58 days ago</td>
+                <td><button class="btn secondary" onclick="openProfile('Kevin Ng','risk')">View Detail</button><button class="btn" onclick="openModal('Kevin Ng','credit delay')">Send Email</button></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Profile panel -->
-        <div id="profilePanel" class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <!-- Profile Detail Panel -->
+        <div id="profilePanel" class="card" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <div>
-              <div class="card-eyebrow">Student Profile</div>
-              <h2 id="profileTitle" class="card-title" style="font-size:1.1rem">—</h2>
+              <h2 id="profileTitle" style="margin-bottom:4px;">Student Profile</h2>
+              <div id="profileBadges"><span class="badge blue">Year 3</span><span class="badge" style="background:#dbeafe;color:#1e40af;">Financial Mathematics</span></div>
             </div>
             <button class="btn secondary" onclick="closeProfile()">Close</button>
           </div>
-          <div class="profile-section">
-            <span class="badge badge-blue">Year 3</span>
-            <span class="badge badge-green">Financial Mathematics</span>
-          </div>
-          <div class="grid-2" style="margin-bottom:0">
+
+          <!-- Two-column layout -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+            <!-- Left: chart + courses -->
             <div>
-              <div class="profile-section">
-                <h3>GPA Trend</h3>
-                <div class="mini-chart">
-                  <svg viewBox="0 0 420 130" width="100%" height="130">
-                    <!-- grid -->
-                    <line x1="35" y1="18"  x2="405" y2="18"  stroke="#e5e7eb" stroke-width="1"/>
-                    <line x1="35" y1="48"  x2="405" y2="48"  stroke="#e5e7eb" stroke-width="1"/>
-                    <line x1="35" y1="78"  x2="405" y2="78"  stroke="#e5e7eb" stroke-width="1"/>
-                    <!-- axes -->
-                    <line x1="35" y1="15" x2="35"  y2="98" stroke="#d1d5db" stroke-width="1.5"/>
-                    <line x1="35" y1="98" x2="405" y2="98" stroke="#d1d5db" stroke-width="1.5"/>
-                    <!-- line -->
-                    <polyline points="55,28 165,45 275,62 385,82" fill="none" stroke="#6b8cfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <!-- dots -->
-                    <circle cx="55"  cy="28" r="5" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-                    <circle cx="165" cy="45" r="5" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-                    <circle cx="275" cy="62" r="5" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-                    <circle cx="385" cy="82" r="5" fill="#6b8cfa" stroke="#f7f7f8" stroke-width="2"/>
-                    <!-- x labels -->
-                    <text x="55"  y="114" text-anchor="middle" font-size="9" fill="#958b86">2024 Spr</text>
-                    <text x="165" y="114" text-anchor="middle" font-size="9" fill="#958b86">2024 Fall</text>
-                    <text x="275" y="114" text-anchor="middle" font-size="9" fill="#958b86">2025 Spr</text>
-                    <text x="385" y="114" text-anchor="middle" font-size="9" fill="#958b86">2025 Fall</text>
-                  </svg>
-                </div>
-              </div>
-              <div class="profile-section">
-                <h3>Credits &amp; Courses</h3>
-                <ul>
-                  <li>Credits Completed: 70%</li>
-                  <li>Missing Required: MAT3002, STA2001</li>
-                </ul>
-              </div>
-            </div>
-            <div>
-              <div class="profile-section">
-                <h3>Communication History</h3>
-                <ul>
-                  <li>Mar 10 — Discussed GPA decline</li>
-                  <li>Apr 02 — Follow-up planned</li>
-                  <li>Last Contact — over 120 days ago</li>
-                </ul>
-              </div>
-              <div class="profile-section">
-                <h3>Advisor Notes</h3>
-                <textarea>Student may need academic planning support and follow-up meeting.</textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rule assistant -->
-        <div class="card">
-          <div class="card-eyebrow">Rule Assistant</div>
-          <div class="card-title" style="margin-bottom:6px">Adjust Risk Weights</div>
-          <p class="page-subtitle" style="margin-bottom:16px">Modify risk rules using plain-language input. This prototype demonstrates the interaction flow; final implementation maps input to structured rule parameters.</p>
-          <div class="grid-2" style="margin-bottom:0">
-            <div>
-              <div class="assistant-row">
-                <input id="aiInput" value="Increase GPA decline threshold to 0.4" />
-                <button class="btn" onclick="applyRule()">Apply</button>
-              </div>
-            </div>
-            <div>
-              <div class="section-label">Current Risk Calculation Logic</div>
-              <ul class="logic-list">
-                <li>40% — GPA decline</li>
-                <li>30% — Credit completion delay</li>
-                <li>20% — No-contact duration</li>
-                <li>10% — Final-year urgency</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ══════════════════════════════════════════════════════════
-           PAGE: STUDENT MANAGEMENT
-      ══════════════════════════════════════════════════════════════ -->
-      <section id="students" class="page">
-        <h1 class="page-title">Student Management</h1>
-        <p class="page-subtitle">The main working area for advisors to manage student cases efficiently in one place.</p>
-
-        <div class="filters">
-          <select>
-            <option>Risk Level: All</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-          <select>
-            <option>Year: All</option>
-            <option>Year 2</option>
-            <option>Year 3</option>
-            <option>Year 4</option>
-          </select>
-          <select>
-            <option>Major: Financial Mathematics</option>
-          </select>
-          <input placeholder="Search student name…" />
-        </div>
-
-        <div class="student-layout">
-          <!-- Advisee list -->
-          <div class="card" style="margin-bottom:0">
-            <div class="card-eyebrow">Advisee List</div>
-            <table class="aa-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Risk</th>
-                  <th>GPA</th>
-                  <th>Credits</th>
-                  <th>Last Contact</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="cursor:pointer" onclick="selectStudent('Amy Chen', 'High', '2.61', '68%', '142 days ago')">
-                  <td><strong>Amy Chen</strong></td>
-                  <td><span class="badge badge-red">High</span></td>
-                  <td>2.61</td>
-                  <td>68%</td>
-                  <td>142 days ago</td>
-                </tr>
-                <tr style="cursor:pointer" onclick="selectStudent('Tom Lee', 'Medium', '2.94', '74%', '96 days ago')">
-                  <td><strong>Tom Lee</strong></td>
-                  <td><span class="badge badge-orange">Medium</span></td>
-                  <td>2.94</td>
-                  <td>74%</td>
-                  <td>96 days ago</td>
-                </tr>
-                <tr style="cursor:pointer" onclick="selectStudent('Jack Wong', 'High', '2.48', '70%', '120 days ago')">
-                  <td><strong>Jack Wong</strong></td>
-                  <td><span class="badge badge-red">High</span></td>
-                  <td>2.48</td>
-                  <td>70%</td>
-                  <td>120 days ago</td>
-                </tr>
-                <tr style="cursor:pointer" onclick="selectStudent('Linda Zhang', 'Low', '3.42', '86%', '21 days ago')">
-                  <td><strong>Linda Zhang</strong></td>
-                  <td><span class="badge badge-green">Low</span></td>
-                  <td>3.42</td>
-                  <td>86%</td>
-                  <td>21 days ago</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Student profile panel -->
-          <div class="card" id="studentDetail" style="margin-bottom:0">
-            <div class="card-eyebrow">Student Profile</div>
-            <h2 id="studentName" class="card-title" style="font-size:1.2rem;margin-bottom:12px">Amy Chen</h2>
-            <div class="profile-section">
-              <span class="badge badge-blue">Year 3</span>
-              <span class="badge badge-green">Financial Mathematics</span>
-              <span id="studentRiskBadge" class="badge badge-red">High Risk</span>
-            </div>
-
-            <div class="grid-2" style="margin:16px 0 0">
-              <div class="stat-cell">
-                <span class="stat-num purple" id="studentGPA">2.61</span>
-                <span class="stat-desc">Current GPA</span>
-              </div>
-              <div class="stat-cell">
-                <span class="stat-num orange" id="studentCredits">68%</span>
-                <span class="stat-desc">Credit Completion</span>
-              </div>
-            </div>
-
-            <div style="height:16px"></div>
-
-            <div class="profile-section">
-              <h3>GPA Trend</h3>
-              <div class="mini-chart">
-                <svg viewBox="0 0 420 120" width="100%" height="120">
-                  <line x1="35" y1="20" x2="35" y2="95" stroke="#dbdbde" stroke-width="2"/>
-                  <line x1="35" y1="95" x2="400" y2="95" stroke="#dbdbde" stroke-width="2"/>
-                  <polyline points="45,35 155,48 265,62 380,82" fill="none" stroke="#8a5cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="45"  cy="35" r="5" fill="#8a5cff"/>
-                  <circle cx="155" cy="48" r="5" fill="#8a5cff"/>
-                  <circle cx="265" cy="62" r="5" fill="#8a5cff"/>
-                  <circle cx="380" cy="82" r="5" fill="#8a5cff"/>
+              <h3 style="margin-bottom:8px;">GPA Trend</h3>
+              <div style="border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; padding:10px; margin-bottom:16px;">
+                <svg viewBox="0 0 400 110" width="100%" height="110">
+                  <line x1="32" y1="10" x2="32" y2="88" stroke="#d1d5db" stroke-width="1.5"/>
+                  <line x1="32" y1="88" x2="390" y2="88" stroke="#d1d5db" stroke-width="1.5"/>
+                  <line x1="32" y1="88" x2="32" y2="10" stroke="none"/>
+                  <text x="26" y="30" text-anchor="end" font-size="9" fill="#9ca3af">3.5</text>
+                  <text x="26" y="55" text-anchor="end" font-size="9" fill="#9ca3af">3.0</text>
+                  <text x="26" y="80" text-anchor="end" font-size="9" fill="#9ca3af">2.5</text>
+                  <line x1="32" y1="30" x2="390" y2="30" stroke="#f3f4f6" stroke-width="1"/>
+                  <line x1="32" y1="55" x2="390" y2="55" stroke="#f3f4f6" stroke-width="1"/>
+                  <polyline points="50,28 150,40 270,58 380,76" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="50"  cy="28" r="4" fill="#3b82f6"/>
+                  <circle cx="150" cy="40" r="4" fill="#3b82f6"/>
+                  <circle cx="270" cy="58" r="4" fill="#3b82f6"/>
+                  <circle cx="380" cy="76" r="4" fill="#3b82f6"/>
+                  <text x="50"  y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Sp'24</text>
+                  <text x="150" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Fa'24</text>
+                  <text x="270" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Sp'25</text>
+                  <text x="380" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Fa'25</text>
                 </svg>
               </div>
+
+              <h3 style="margin-bottom:10px;">Credit Completion</h3>
+              <div style="margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                  <span style="color:#374151; font-weight:500;">Overall</span>
+                  <span style="color:#1d4ed8; font-weight:600;">70% <span style="color:#9ca3af; font-weight:400;">(84/120cr)</span></span>
+                </div>
+                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:70%; background:#1d4ed8;"></div></div>
+              </div>
+
+              <h3 style="margin-bottom:10px; margin-top:14px;">Missing / Incomplete Courses</h3>
+              <div id="missingCoursesBlock" style="font-size:13px;">
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:11px; font-weight:600; color:#b91c1c; text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;">Major Required</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <span style="background:#fee2e2; color:#b91c1c; padding:3px 9px; border-radius:6px; font-size:12px;">MAT3002</span>
+                    <span style="background:#fee2e2; color:#b91c1c; padding:3px 9px; border-radius:6px; font-size:12px;">STA2001</span>
+                  </div>
+                </div>
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:11px; font-weight:600; color:#92400e; text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;">Electives</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:6px; font-size:12px;">FIN3010</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:11px; font-weight:600; color:#1e40af; text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;">University Core</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <span style="background:#dbeafe; color:#1e40af; padding:3px 9px; border-radius:6px; font-size:12px;">GEC1000</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="profile-section">
-              <h3>Credits &amp; Courses</h3>
-              <ul>
-                <li>Credits Completed: 68%</li>
-                <li>Missing Required: MAT3002, STA2001</li>
-              </ul>
+            <!-- Right: communication + notes -->
+            <div>
+              <h3 style="margin-bottom:10px;">Communication History</h3>
+              <div style="border:1px solid #e5e7eb; border-radius:10px; padding:14px; margin-bottom:16px; background:#fafafa;">
+                <div id="commHistoryBlock" style="display:flex; flex-direction:column; gap:10px;">
+                  <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <span style="background:#dbeafe; color:#1e40af; font-size:11px; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:1px;">Mar 10</span>
+                    <span style="font-size:13px; color:#374151;">Discussed GPA decline — student expressed stress about coursework.</span>
+                  </div>
+                  <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <span style="background:#dbeafe; color:#1e40af; font-size:11px; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:1px;">Apr 02</span>
+                    <span style="font-size:13px; color:#374151;">Follow-up meeting planned — not yet confirmed.</span>
+                  </div>
+                  <div style="display:flex; gap:10px; align-items:flex-start; padding-top:6px; border-top:1px dashed #e5e7eb;">
+                    <span style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:1px;">Alert</span>
+                    <span style="font-size:13px; color:#b91c1c; font-weight:500;">Last contact over 120 days ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <h3 style="margin-bottom:8px;">Advisor Notes</h3>
+              <textarea id="profileNotes" style="width:100%; min-height:90px; font-size:13px; line-height:1.6; border:1px solid #d1d5db; border-radius:10px; padding:10px; resize:vertical;">Student may need academic planning support and follow-up meeting. Consider discussing course load reduction options.</textarea>
+
+              <!-- Send Email button bottom right -->
+              <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+                <button class="btn" id="profileEmailBtn" onclick="openModal('Amy Chen','GPA drop and no recent contact')" style="padding:10px 22px; font-size:14px;">Send Email</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-bottom:4px;">Early Warning Configuration</h2>
+          <p style="font-size:13px; color:#6b7280; margin-bottom:18px;">Customise how risk scores are calculated and define the thresholds that trigger each alert category.</p>
+
+          <!-- Live formula -->
+          <div style="background:#f0f4ff; border:1px solid #c7d7fb; border-radius:10px; padding:13px 18px; margin-bottom:22px; font-size:13px; color:#1e3a8a; font-family:monospace; line-height:2;">
+            Risk Score &nbsp;=&nbsp;
+            <span id="fw-gpa">40</span>% × GPA Decline &nbsp;+&nbsp;
+            <span id="fw-credit">30</span>% × Credit Delay &nbsp;+&nbsp;
+            <span id="fw-contact">20</span>% × No-Contact Duration &nbsp;+&nbsp;
+            <span id="fw-final">10</span>% × Final-Year Urgency
+          </div>
+
+          <!-- TOP SECTION: Score Weights (2×2) + High Risk threshold -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; margin-bottom:24px;">
+
+            <!-- Score Weights 2×2 grid -->
+            <div>
+              <h3 style="margin-bottom:12px; font-size:14px; color:#374151;">Score Weights</h3>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+                <div style="background:#f8faff; border:1px solid #e0e7ff; border-radius:8px; padding:12px;">
+                  <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:2px;">GPA Decline</div>
+                  <div style="font-size:10px; color:#9ca3af; margin-bottom:8px;">Semester GPA drop</div>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <input type="number" id="wi-gpa" min="0" max="100" value="40" style="width:65px; text-align:center; font-weight:700; color:#1d4ed8; font-size:16px;" oninput="updateWeights()">
+                    <span style="font-size:13px; color:#6b7280;">%</span>
+                  </div>
+                </div>
+
+                <div style="background:#f8faff; border:1px solid #e0e7ff; border-radius:8px; padding:12px;">
+                  <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:2px;">Credit Delay</div>
+                  <div style="font-size:10px; color:#9ca3af; margin-bottom:8px;">Credits vs. expected</div>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <input type="number" id="wi-credit" min="0" max="100" value="30" style="width:65px; text-align:center; font-weight:700; color:#1d4ed8; font-size:16px;" oninput="updateWeights()">
+                    <span style="font-size:13px; color:#6b7280;">%</span>
+                  </div>
+                </div>
+
+                <div style="background:#f8faff; border:1px solid #e0e7ff; border-radius:8px; padding:12px;">
+                  <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:2px;">No-Contact Duration</div>
+                  <div style="font-size:10px; color:#9ca3af; margin-bottom:8px;">Days since last contact</div>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <input type="number" id="wi-contact" min="0" max="100" value="20" style="width:65px; text-align:center; font-weight:700; color:#1d4ed8; font-size:16px;" oninput="updateWeights()">
+                    <span style="font-size:13px; color:#6b7280;">%</span>
+                  </div>
+                </div>
+
+                <div style="background:#f8faff; border:1px solid #e0e7ff; border-radius:8px; padding:12px;">
+                  <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:2px;">Final-Year Urgency</div>
+                  <div style="font-size:10px; color:#9ca3af; margin-bottom:8px;">Yr-4 unresolved req.</div>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <input type="number" id="wi-final" min="0" max="100" value="10" style="width:65px; text-align:center; font-weight:700; color:#1d4ed8; font-size:16px;" oninput="updateWeights()">
+                    <span style="font-size:13px; color:#6b7280;">%</span>
+                  </div>
+                </div>
+
+              </div>
+              <!-- Total indicator -->
+              <div style="margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:13px; color:#6b7280;">Total:</span>
+                  <span id="totalWeight" style="font-size:14px; font-weight:700; color:#15803d;">100%</span>
+                  <span id="weightWarning" style="font-size:11px; color:#b91c1c; display:none;">Must equal 100%</span>
+                </div>
+                <button class="btn secondary" onclick="resetWeights()" style="font-size:12px; padding:4px 10px;">Reset</button>
+              </div>
             </div>
 
-            <div class="profile-section">
-              <h3>Communication History</h3>
-              <ul>
-                <li>Mar 10 — Discussed GPA decline</li>
-                <li>Apr 02 — Follow-up planned</li>
-                <li id="studentLastContact">Last Contact — 142 days ago</li>
-              </ul>
+            <!-- High Risk threshold -->
+            <div>
+              <h3 style="margin-bottom:12px; font-size:14px; color:#374151;">High Risk Classification</h3>
+              <div style="background:#fff1f2; border:1px solid #fecaca; border-radius:10px; padding:16px;">
+                <div style="font-size:13px; font-weight:600; color:#b91c1c; margin-bottom:10px;">High Risk Student Threshold</div>
+                <div style="font-size:12px; color:#374151; line-height:2;">
+                  Classify a student as High Risk if their Risk Score is ≥
+                  <input type="number" id="th-high-risk" min="50" max="100" value="85" style="width:68px; text-align:center; font-weight:700; color:#b91c1c; font-size:15px; display:inline-block; padding:2px 6px;" oninput="applyHighRiskThreshold()">
+                </div>
+                <div id="high-risk-eg" style="font-size:11px; color:#9ca3af; margin-top:8px;">
+                  Currently showing students with score ≥ 85 in the High Risk panel above.
+                </div>
+                <div style="margin-top:12px; padding-top:10px; border-top:1px solid #fecaca;">
+                  <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">Visible in High Risk panel at current threshold:</div>
+                  <span id="high-risk-count" class="badge red" style="font-size:13px; padding:4px 12px;">2 students</span>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div class="profile-section">
-              <h3>Advisor Notes</h3>
-              <textarea id="studentNotes">Student reports pressure from internship search and heavy course load.</textarea>
-            </div>
+          <!-- BOTTOM SECTION: Alert Thresholds -->
+          <div style="border-top:1px solid #e5e7eb; padding-top:20px;">
+            <h3 style="margin-bottom:14px; font-size:14px; color:#374151;">Alert Thresholds</h3>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
 
-            <div class="profile-section">
-              <h3>Actions</h3>
-              <button class="btn" onclick="openModal(document.getElementById('studentName').textContent, 'requires support')">Draft Outreach</button>
-              <button class="btn secondary">Schedule Meeting</button>
+              <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px;">
+                <div style="font-size:13px; font-weight:600; color:#92400e; margin-bottom:8px;">Credit Alert</div>
+                <div style="font-size:12px; color:#374151; line-height:1.9;">
+                  Flag if credits &lt;
+                  <input type="number" id="th-credit-per-sem" min="1" max="30" value="15" style="width:60px; text-align:center; font-weight:700; color:#c2410c; display:inline-block; padding:2px 5px;" oninput="updateThresholdDisplay()">
+                  × semesters attended
+                </div>
+                <div id="credit-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:6px;">e.g. Year 3 (4 sems) flagged if credits &lt; 60</div>
+              </div>
+
+              <div style="background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:14px;">
+                <div style="font-size:13px; font-weight:600; color:#92400e; margin-bottom:8px;">GPA Drop</div>
+                <div style="font-size:12px; color:#374151; line-height:1.9;">
+                  Flag if GPA fell by ≥
+                  <input type="number" id="th-gpa-drop" min="0.05" max="2.0" step="0.05" value="0.30" style="width:68px; text-align:center; font-weight:700; color:#a16207; display:inline-block; padding:2px 5px;" oninput="updateThresholdDisplay()">
+                  pts in one semester
+                </div>
+                <div id="gpa-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:6px;">e.g. 3.20 → 2.90 triggers alert</div>
+              </div>
+
+              <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px;">
+                <div style="font-size:13px; font-weight:600; color:#1e40af; margin-bottom:8px;">No Contact</div>
+                <div style="font-size:12px; color:#374151; line-height:1.9;">
+                  Flag if last contact &gt;
+                  <input type="number" id="th-no-contact" min="7" max="365" value="90" style="width:68px; text-align:center; font-weight:700; color:#1d4ed8; display:inline-block; padding:2px 5px;" oninput="updateThresholdDisplay()">
+                  days ago
+                </div>
+                <div id="contact-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:6px;">Currently: no contact in 90+ days</div>
+              </div>
+
             </div>
           </div>
         </div>
       </section>
 
-    </div><!-- /.main -->
-  </div><!-- /.app -->
-</div><!-- /.shell -->
+      <section id="student" class="page">
+        <h1>Student Management</h1>
+        <p class="subtitle">The main working area for advisors to manage student cases efficiently in one place.</p>
 
+        <!-- Top filters -->
+        <div class="filters" style="margin-bottom:20px;">
+          <select id="sm-filter-risk" onchange="filterStudentList()" style="flex:1; min-width:140px;">
+            <option value="all">Risk Level: All</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select id="sm-filter-year" onchange="filterStudentList()" style="flex:1; min-width:120px;">
+            <option value="all">Year: All</option>
+            <option value="Year 2">Year 2</option>
+            <option value="Year 3">Year 3</option>
+            <option value="Year 4">Year 4</option>
+          </select>
+          <select id="sm-filter-major" onchange="filterStudentList()" style="flex:1; min-width:140px;">
+            <option value="all">Major: All</option>
+            <option value="Financial Mathematics">Financial Mathematics</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Economics">Economics</option>
+          </select>
+          <form style="display: inline-block; flex:1; min-width:260px; margin-right: 0;">
+            <label for="search" class="sr-only">Search</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                    <svg class="w-4 h-4" style="color: #9ca3af;" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                </div>
+                <input type="search" id="sm-search" style="border: 1px solid #d1d5db; border-radius: 6px; padding: 10px 12px 10px 36px; background: white; font-size: 14px; width: 100%;" placeholder="Search" oninput="filterStudentList()" />
+                <button type="button" style="position: absolute; right: 6px; bottom: 6px; background: #1d4ed8; color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; font-weight: 600;">Search</button>
+            </div>
+          </form>
+        </div>
 
-<!-- ── Outreach Modal ────────────────────────────────────────── -->
-<div id="modalMask" class="modal-mask">
-  <div class="modal">
-    <h2 id="modalTitle">Outreach Draft</h2>
-    <p class="modal-sub" id="modalSub">Review and edit the message below before sending.</p>
-    <textarea id="draftText" style="min-height:160px"></textarea>
-    <div class="modal-actions">
+        <div style="display:grid; grid-template-columns:60% 40%; gap:10px; align-items:start;">
+
+          <!-- LEFT: Advisee List with column filters -->
+          <div class="card" style="padding:0; overflow:visible;">
+            <div style="padding:16px 20px 12px; display:flex; justify-content:space-between; align-items:center;">
+              <h2 style="margin-bottom:0;">Advisee List</h2>
+              <button onclick="exportToExcel()" style="background:none; border:none; cursor:pointer; padding:8px; display:flex; align-items:center; gap:6px; color:#1f2937; font-size:14px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'" title="Export to Excel">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+              </button>
+            </div>
+            <div style="overflow-x:auto; overflow-y:visible;">
+              <table id="smTable" style="margin-bottom:0;">
+                <thead>
+                  <!-- Column header row -->
+                  <tr style="background:#f8faff; border-bottom:1px solid #e5e7eb;">
+                    <th style="padding:10px 12px; font-size:15px; white-space:nowrap; width:22%;">
+                      Name
+                      <button data-sort-col="name" onclick="toggleSort('name')" style="background:none; border:none; cursor:pointer; padding:4px; color:#6b7280; margin-left:4px; font-weight:700;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg>
+                      </button>
+                    </th>
+                    <th style="padding:6px 4px; width:17%;">
+                      <div style="display:flex; gap:3px; align-items:center;">
+                        <select id="col-risk" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
+                          <option value="all">All</option>
+                          <option value="High">High</option>
+                          <option value="Medium">Med</option>
+                          <option value="Low">Low</option>
+                        </select>
+                        <button data-sort-col="risk" onclick="toggleSort('risk')" style="background:none; border:none; cursor:pointer; padding:4px; color:#6b7280; flex-shrink:0; font-weight:700;">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg>
+                        </button>
+                      </div>
+                    </th>
+                    <th style="padding:6px 4px; width:17%;">
+                      <div style="display:flex; gap:3px; align-items:center;">
+                        <select id="col-gpa" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
+                          <option value="all">All</option>
+                          <option value="below3">&lt; 3.0</option>
+                          <option value="above3">≥ 3.0</option>
+                        </select>
+                        <button data-sort-col="gpa" onclick="toggleSort('gpa')" style="background:none; border:none; cursor:pointer; padding:4px; color:#6b7280; flex-shrink:0; font-weight:700;">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg>
+                        </button>
+                      </div>
+                    </th>
+                    <th style="padding:6px 4px; width:17%;">
+                      <div style="display:flex; gap:3px; align-items:center;">
+                        <select id="col-credits" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
+                          <option value="all">All</option>
+                          <option value="below70">&lt; 70%</option>
+                          <option value="above70">≥ 70%</option>
+                        </select>
+                        <button data-sort-col="credits" onclick="toggleSort('credits')" style="background:none; border:none; cursor:pointer; padding:4px; color:#6b7280; flex-shrink:0; font-weight:700;">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg>
+                        </button>
+                      </div>
+                    </th>
+                    <th style="padding:6px 4px; width:27%;">
+                      <div style="display:flex; gap:3px; align-items:center;">
+                        <select id="col-contact" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
+                          <option value="all">All</option>
+                          <option value="recent">≤ 30 days</option>
+                          <option value="old">&gt; 90 days</option>
+                        </select>
+                        <button data-sort-col="contact" onclick="toggleSort('contact')" style="background:none; border:none; cursor:pointer; padding:4px; color:#6b7280; flex-shrink:0; font-weight:700;">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-4 4 4"/><path d="M16 15l-4 4-4-4"/></svg>
+                        </button>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="smTableBody">
+                  <tr data-name="Amy Chen" data-risk="High" data-gpa="2.61" data-credits="68" data-days="142" onclick="openStudentProfile('Amy Chen')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Amy Chen</td>
+                    <td style="width:120px;"><span class="badge red">High</span></td>
+                    <td style="width:120px;">2.61</td><td style="width:120px;">68%</td><td style="width:160px;">142 days ago</td>
+                  </tr>
+                  <tr data-name="Tom Lee" data-risk="Medium" data-gpa="2.94" data-credits="74" data-days="96" onclick="openStudentProfile('Tom Lee')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Tom Lee</td>
+                    <td><span class="badge orange-badge">Medium</span></td>
+                    <td>2.94</td><td>74%</td><td>96 days ago</td>
+                  </tr>
+                  <tr data-name="Jack Wong" data-risk="High" data-gpa="2.48" data-credits="70" data-days="120" onclick="openStudentProfile('Jack Wong')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Jack Wong</td>
+                    <td><span class="badge red">High</span></td>
+                    <td>2.48</td><td>70%</td><td>120 days ago</td>
+                  </tr>
+                  <tr data-name="Linda Zhang" data-risk="Low" data-gpa="3.42" data-credits="86" data-days="21" onclick="openStudentProfile('Linda Zhang')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Linda Zhang</td>
+                    <td><span class="badge green-badge">Low</span></td>
+                    <td>3.42</td><td>86%</td><td>21 days ago</td>
+                  </tr>
+                  <tr data-name="Kevin Ng" data-risk="Medium" data-gpa="3.01" data-credits="62" data-days="58" onclick="openStudentProfile('Kevin Ng')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Kevin Ng</td>
+                    <td><span class="badge orange-badge">Medium</span></td>
+                    <td>3.01</td><td>62%</td><td>58 days ago</td>
+                  </tr>
+                  <tr data-name="Sarah Liu" data-risk="High" data-gpa="2.55" data-credits="65" data-days="88" onclick="openStudentProfile('Sarah Liu')" style="cursor:pointer;" class="sm-row">
+                    <td style="font-weight:600;">Sarah Liu</td>
+                    <td><span class="badge red">High</span></td>
+                    <td>2.55</td><td>65%</td><td>88 days ago</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="smNoResults" style="display:none; padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No students match the current filters.</div>
+          </div>
+
+          <!-- RIGHT: Student Profile panel -->
+          <div class="card" id="smProfileCard">
+            <div id="smProfileEmpty" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; color:#9ca3af;">
+              <div style="font-size:14px;">Click a student to view their profile</div>
+            </div>
+            <div id="smProfileContent" style="display:none;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                  <h2 id="smProfileTitle" style="margin-bottom:2px; font-size:18px;">Student Profile</h2>
+                  <div id="smProfileBadges"></div>
+                </div>
+              </div>
+              <!-- Two-column body (same as Risk Snapshot) -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start;">
+                <!-- Left -->
+                <div>
+                  <h3 style="margin-bottom:6px; font-size:14px;">GPA Trend</h3>
+                  <div style="border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; padding:8px; margin-bottom:12px;">
+                    <svg viewBox="0 0 400 110" width="100%" height="110">
+                      <line x1="32" y1="10" x2="32" y2="88" stroke="#d1d5db" stroke-width="1.5"/>
+                      <line x1="32" y1="88" x2="390" y2="88" stroke="#d1d5db" stroke-width="1.5"/>
+                      <text x="26" y="30" text-anchor="end" font-size="9" fill="#9ca3af">3.5</text>
+                      <text x="26" y="55" text-anchor="end" font-size="9" fill="#9ca3af">3.0</text>
+                      <text x="26" y="80" text-anchor="end" font-size="9" fill="#9ca3af">2.5</text>
+                      <line x1="32" y1="30" x2="390" y2="30" stroke="#f3f4f6" stroke-width="1"/>
+                      <line x1="32" y1="55" x2="390" y2="55" stroke="#f3f4f6" stroke-width="1"/>
+                      <polyline points="50,28 150,40 270,58 380,76" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="50"  cy="28" r="4" fill="#3b82f6"/>
+                      <circle cx="150" cy="40" r="4" fill="#3b82f6"/>
+                      <circle cx="270" cy="58" r="4" fill="#3b82f6"/>
+                      <circle cx="380" cy="76" r="4" fill="#3b82f6"/>
+                      <text x="50"  y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Sp'24</text>
+                      <text x="150" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Fa'24</text>
+                      <text x="270" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Sp'25</text>
+                      <text x="380" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Fa'25</text>
+                    </svg>
+                  </div>
+                  <h3 style="margin-bottom:6px; font-size:14px;">Credit Completion</h3>
+                  <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+                      <span style="color:#374151; font-weight:500;">Overall</span>
+                      <span id="smCreditPct" style="color:#1d4ed8; font-weight:600;">70%</span>
+                    </div>
+                    <div class="progress-line" style="height:6px; margin:0;"><div id="smCreditBar" class="progress-fill" style="width:70%; background:#1d4ed8;"></div></div>
+                  </div>
+                  <h3 style="margin-bottom:6px; font-size:14px;">Missing / Incomplete Courses</h3>
+                  <div id="smMissingCourses" style="font-size:12px;"></div>
+                </div>
+                <!-- Right -->
+                <div>
+                  <h3 style="margin-bottom:8px; font-size:14px;">Communication History</h3>
+                  <div style="border:1px solid #e5e7eb; border-radius:10px; padding:10px; margin-bottom:10px; background:#fafafa;">
+                    <div id="smCommHistory" style="display:flex; flex-direction:column; gap:8px;"></div>
+                  </div>
+                  <h3 style="margin-bottom:6px; font-size:14px;">Advisor Notes</h3>
+                  <textarea id="smNotes" style="width:100%; min-height:70px; font-size:12px; line-height:1.5; border:1px solid #d1d5db; border-radius:10px; padding:8px; resize:vertical;"></textarea>
+                  <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                    <button class="btn" id="smEmailBtn" style="padding:8px 16px; font-size:12px;">Send Email</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalMask" class="modal-mask">
+    <div class="modal">
+      <h2 id="modalTitle">Outreach Draft</h2>
+      <textarea id="draftText"></textarea>
       <button class="btn secondary" onclick="closeModal()">Edit Later</button>
-      <button class="btn" onclick="closeModal()">Confirm &amp; Send</button>
+      <button class="btn" onclick="closeModal()">Confirm & Send</button>
     </div>
   </div>
-</div>
 
+  <div id="profileSettingsModal" class="modal-mask" style="display:none;">
+    <div class="modal">
+      <h2 style="margin-bottom:20px;">Profile Settings</h2>
+      <div style="text-align:center; margin-bottom:20px;">
+        <div id="profilePreview" style="width:80px; height:80px; background:#003087; border-radius:50%; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; color:white;">
+          <svg style="width:48px; height:48px;" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="uploadProfilePic(event)">
+        <button class="btn" onclick="document.getElementById('profilePicInput').click()" style="margin-bottom:12px;">Upload Photo</button>
+        <div style="font-size:12px; color:#9ca3af;">Recommended: Square image, at least 200x200px</div>
+      </div>
+      <div style="border-top:1px solid #e5e7eb; padding-top:16px;">
+        <label style="display:block; margin-bottom:12px;">
+          <div style="font-size:14px; font-weight:600; color:#374151; margin-bottom:6px;">Name</div>
+          <input type="text" id="profileName" value="Prof. Paolo PIERSANTI" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        </label>
+        <label style="display:block; margin-bottom:16px;">
+          <div style="font-size:14px; font-weight:600; color:#374151; margin-bottom:6px;">Role</div>
+          <input type="text" id="profileRole" value="Academic Advisor" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        </label>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
+        <button class="btn secondary" onclick="closeProfileSettings()">Cancel</button>
+        <button class="btn" onclick="saveProfileSettings()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 
-<script>
-  // ── Page navigation ──────────────────────────────────────────
-  function showPage(id, btn) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById(id);
-    if (target) target.classList.add('active');
-    document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    window.scrollTo(0, 0);
-  }
+  <script>
+    function setupDropdownClickOnly() {
+      var dropdowns = document.querySelectorAll('.filter-dropdown');
+      dropdowns.forEach(function(dropdown) {
+        var btn = dropdown.querySelector('.filter-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          var isOpen = dropdown.classList.contains('show');
+          document.querySelectorAll('.filter-dropdown.show').forEach(function(openDropdown) {
+            openDropdown.classList.remove('show');
+          });
+          if (!isOpen) dropdown.classList.add('show');
+        });
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.filter-dropdown')) {
+          document.querySelectorAll('.filter-dropdown.show').forEach(function(openDropdown) {
+            openDropdown.classList.remove('show');
+          });
+        }
+      });
+    }
 
-  // ── Risk filter ──────────────────────────────────────────────
-  function filterReason() {
-    const val = document.getElementById('reasonFilter').value;
-    document.querySelectorAll('#riskTable tbody tr').forEach(row => {
-      const type = row.dataset.type || '';
-      row.style.display = (val === 'all' || type.includes(val)) ? '' : 'none';
+    document.addEventListener('DOMContentLoaded', setupDropdownClickOnly);
+
+    function toggleDropdown(dropdownId) {
+      var dropdown = document.getElementById(dropdownId);
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleSelectAll(filterType) {
+      var dropdownMap = {
+        'year': 'yearDropdown',
+        'major': 'majorDropdown',
+        'school': 'schoolDropdown'
+      };
+      var dropdownId = dropdownMap[filterType];
+      var dropdown = document.getElementById(dropdownId);
+      var checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+      var selectAllCheckbox = checkboxes[0];
+
+      if (selectAllCheckbox.checked) {
+        checkboxes.forEach(checkbox => checkbox.checked = true);
+      } else {
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+      }
+      applyOverviewFilter();
+    }
+
+    function toggleSidebar() {
+      var sidebar = document.getElementById('sidebar');
+      var app = document.querySelector('.app');
+      sidebar.classList.toggle('collapsed');
+      if (app) app.classList.toggle('sidebar-collapsed');
+      // Let layout transition finish, then force responsive charts to recalc canvas size.
+      setTimeout(function() {
+        window.dispatchEvent(new Event('resize'));
+        if (window.Chart && Chart.instances) {
+          Object.keys(Chart.instances).forEach(function(key) {
+            var chart = Chart.instances[key];
+            if (chart && typeof chart.resize === 'function') chart.resize();
+          });
+        }
+      }, 320);
+    }
+
+    function logout() {
+      sessionStorage.removeItem('cuhksz_user_session');
+      window.location.href = '/app';
+    }
+
+    function openProfileSettings() {
+      document.getElementById('profileSettingsModal').style.display = 'flex';
+    }
+
+    function closeProfileSettings() {
+      document.getElementById('profileSettingsModal').style.display = 'none';
+    }
+
+    function uploadProfilePic(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var imgData = e.target.result;
+        document.getElementById('userAvatar').innerHTML = '<img src="' + imgData + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">';
+        document.getElementById('profilePreview').innerHTML = '<img src="' + imgData + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">';
+        localStorage.setItem('aa_profilePic', imgData);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveProfileSettings() {
+      var name = document.getElementById('profileName').value || 'Prof. Paolo';
+      var role = document.getElementById('profileRole').value || 'Academic Advisor';
+
+      document.querySelector('.user-name').textContent = name;
+      document.querySelector('.user-role').textContent = role;
+
+      localStorage.setItem('aa_profName', name);
+      localStorage.setItem('aa_profRole', role);
+
+      closeProfileSettings();
+    }
+
+    // Load profile settings from localStorage on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      var savedPic = localStorage.getItem('aa_profilePic');
+      var savedName = localStorage.getItem('aa_profName');
+      var savedRole = localStorage.getItem('aa_profRole');
+
+      if (savedPic) {
+        document.getElementById('userAvatar').innerHTML = '<img src="' + savedPic + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">';
+      }
+      if (savedName) document.querySelector('.user-name').textContent = savedName;
+      if (savedRole) document.querySelector('.user-role').textContent = savedRole;
+      if (savedName) document.getElementById('profileName').value = savedName;
+      if (savedRole) document.getElementById('profileRole').value = savedRole;
     });
-  }
 
-  // ── Profile panel (Risk page) ────────────────────────────────
-  function openProfile(name) {
-    document.getElementById('profileTitle').textContent = name;
-    document.getElementById('profilePanel').style.display = 'block';
-    document.getElementById('profilePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+    function showPage(pageId, element) {
+      document.querySelectorAll('.page').forEach(function(page) {
+        page.classList.remove('active');
+      });
+      document.getElementById(pageId).classList.add('active');
 
-  function closeProfile() {
-    document.getElementById('profilePanel').style.display = 'none';
-  }
+      document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.classList.remove('active');
+      });
+      element.classList.add('active');
+      window.scrollTo(0, 0);
+    }
 
-  // ── Student detail (Students page) ──────────────────────────
-  function selectStudent(name, risk, gpa, credits, lastContact) {
-    document.getElementById('studentName').textContent = name;
-    document.getElementById('studentGPA').textContent = gpa;
-    document.getElementById('studentCredits').textContent = credits;
-    document.getElementById('studentLastContact').textContent = 'Last Contact — ' + lastContact;
+    function filterReason() {
+      var value = document.getElementById('reasonFilter').value;
+      document.querySelectorAll('#riskTable tbody tr').forEach(function(row) {
+        var type = row.getAttribute('data-type') || '';
+        row.style.display = (value === 'all' || type.indexOf(value) !== -1) ? '' : 'none';
+      });
+    }
 
-    const badge = document.getElementById('studentRiskBadge');
-    badge.textContent = risk + ' Risk';
-    badge.className = 'badge ' + (risk === 'High' ? 'badge-red' : risk === 'Medium' ? 'badge-orange' : 'badge-green');
-  }
+    var activeMatrix = 'all';
+    function filterMatrix(cat) {
+      activeMatrix = cat;
+      var allCards = ['rc-credit','rc-gpa','rc-contact'];
+      allCards.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.boxShadow = '';
+      });
+      var clearBtn = document.getElementById('clearFilterBtn');
+      var title = document.getElementById('priorityCardTitle');
 
-  // ── Outreach modal ───────────────────────────────────────────
-  function openModal(name, reason) {
-    document.getElementById('modalTitle').textContent = 'Outreach Draft to ' + name;
-    document.getElementById('modalSub').textContent = 'Re: ' + reason;
-    document.getElementById('draftText').value =
-      'Dear ' + name.split(' ')[0] + ',\n\n' +
-      'I noticed recent changes related to ' + reason + '. I would like to schedule a short meeting this week to discuss support options.\n\n' +
-      'Please share your availability.\n\nBest regards,\nYour Academic Advisor';
-    document.getElementById('modalMask').style.display = 'flex';
-  }
+      if (cat === 'all') {
+        clearBtn.style.display = 'none';
+        title.textContent = 'Priority Students Ranked by Dynamic Risk Score';
+        document.querySelectorAll('#riskTable tbody tr').forEach(function(row) { row.style.display = ''; });
+        return;
+      }
 
-  function closeModal() {
-    document.getElementById('modalMask').style.display = 'none';
-  }
+      var labelMap = { high: 'High Risk', credit: 'Credit Alert', gpa: 'GPA Drop', contact: 'No Contact' };
+      title.textContent = 'Students — ' + labelMap[cat];
+      clearBtn.style.display = '';
 
-  // Close modal on backdrop click
-  document.getElementById('modalMask').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
+      var activeEl = document.getElementById('rc-' + cat);
+      if (activeEl) activeEl.style.boxShadow = '0 0 0 3px rgba(29,78,216,0.35)';
 
-  // ── Rule assistant ───────────────────────────────────────────
-  function applyRule() {
-    const val = document.getElementById('aiInput').value;
-    alert('Rule updated (prototype): ' + val);
-  }
+      document.querySelectorAll('#riskTable tbody tr').forEach(function(row) {
+        var category = row.getAttribute('data-category') || '';
+        row.style.display = category.indexOf(cat) !== -1 ? '' : 'none';
+      });
 
-  // ── Sign out ─────────────────────────────────────────────────
-  function signOut() {
-    sessionStorage.removeItem('cuhksz_user_session');
-    sessionStorage.clear();
-    localStorage.removeItem('cuhksz_user_session');
-    window.location.href = 'index.html?logout=1';
-  }
-</script>
+      document.getElementById('priorityCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
+    var profileStudentData = {
+      'Amy Chen':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '2.61', credits: '70%', creditVal: '84/120', reason: 'GPA drop and no recent contact',
+        history: [['Mar 10','Discussed GPA decline — student expressed stress about coursework.'],['Apr 02','Follow-up meeting planned — not yet confirmed.']],
+        alert: 'Last contact over 120 days ago', notes: 'Student may need academic planning support and follow-up meeting. Consider discussing course load reduction options.',
+        missing: { 'Major Required': ['MAT3002','STA2001'], 'Electives': ['FIN3010'], 'University Core': ['GEC1000'] }
+      },
+      'Tom Lee':   { year: 'Year 4', major: 'Financial Mathematics', gpa: '2.94', credits: '74%', creditVal: '89/120', reason: 'credit progress delay and final-year urgency',
+        history: [['Feb 18','Reviewed graduation requirements — 3 major required courses outstanding.'],['Mar 30','Discussed adding summer session courses.']],
+        alert: 'Last contact 96 days ago', notes: 'Final-year student at risk of delayed graduation. Urgent course planning needed.',
+        missing: { 'Major Required': ['MAT4001','FIN4002','STA3001'], 'Electives': [], 'University Core': [] }
+      },
+      'Jack Wong':  { year: 'Year 2', major: 'Financial Mathematics', gpa: '2.48', credits: '70%', creditVal: '42/60', reason: 'GPA decline',
+        history: [['Jan 15','Initial advising session — academic goals discussed.'],['Feb 28','Midterm check-in — student flagged difficulty in MAT courses.']],
+        alert: 'Last contact 120 days ago', notes: 'GPA has declined two consecutive semesters. Early intervention recommended.',
+        missing: { 'Major Required': ['MAT2001'], 'Electives': ['FIN2005'], 'University Core': [] }
+      },
+      'Linda Zhang':{ year: 'Year 3', major: 'Financial Mathematics', gpa: '3.42', credits: '86%', creditVal: '103/120', reason: 'no recent advisor contact',
+        history: [['Nov 20','Routine check-in — student performing well.']],
+        alert: 'Last contact 135 days ago', notes: 'Strong academic performance. Low risk but overdue for check-in.',
+        missing: { 'Major Required': [], 'Electives': ['FIN3015'], 'University Core': [] }
+      },
+      'Kevin Ng':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '3.01', credits: '62%', creditVal: '74/120', reason: 'credit delay',
+        history: [['Mar 05','Discussed course load — student requested to drop one course.'],['Apr 10','Follow-up on credit plan.']],
+        alert: 'Last contact 58 days ago', notes: 'Behind on credit completion. Needs to add courses next semester to stay on track.',
+        missing: { 'Major Required': ['MAT3005'], 'Electives': ['FIN3008','FIN3012'], 'University Core': ['GEC2000'] }
+      }
+    };
 
-<script>
-  lucide.createIcons();
-</script>
+    function openProfile(name, context) {
+      var d = profileStudentData[name] || {};
+      document.getElementById('profileTitle').textContent = 'Student Profile — ' + name;
+      document.getElementById('profileBadges').innerHTML =
+        '<span class="badge blue">' + (d.year||'Year 3') + '</span>' +
+        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + (d.major||'Financial Mathematics') + '</span>';
+
+      /* Credit bar */
+      var pct = parseInt(d.credits||'70');
+      document.getElementById('profilePanel').querySelector('.progress-fill').style.width = pct + '%';
+      document.getElementById('profilePanel').querySelector('.progress-fill').parentElement.previousElementSibling
+        && (document.getElementById('profilePanel').querySelector('[data-credit]') || null);
+
+      /* Update overall credit text */
+      var creditSpans = document.getElementById('profilePanel').querySelectorAll('span[data-role]');
+
+      /* Missing courses */
+      var missingHtml = '';
+      var catColors = {
+        'Major Required': ['#fee2e2','#b91c1c','#b91c1c'],
+        'Electives':      ['#fef3c7','#92400e','#92400e'],
+        'University Core':['#dbeafe','#1e40af','#1e40af']
+      };
+      if (d.missing) {
+        Object.keys(d.missing).forEach(function(cat) {
+          var courses = d.missing[cat];
+          if (!courses || courses.length === 0) return;
+          var c = catColors[cat] || ['#f3f4f6','#374151','#374151'];
+          missingHtml += '<div style="margin-bottom:10px;">';
+          missingHtml += '<div style="font-size:11px;font-weight:600;color:' + c[2] + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">' + cat + '</div>';
+          missingHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+          courses.forEach(function(course) {
+            missingHtml += '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:3px 9px;border-radius:6px;font-size:12px;">' + course + '</span>';
+          });
+          missingHtml += '</div></div>';
+        });
+      }
+      if (!missingHtml) missingHtml = '<span style="font-size:13px;color:#6b7280;">No missing required courses.</span>';
+      document.getElementById('missingCoursesBlock').innerHTML = missingHtml;
+
+      /* Communication history */
+      var histHtml = '';
+      if (d.history) {
+        d.history.forEach(function(item) {
+          histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+            '<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">' + item[0] + '</span>' +
+            '<span style="font-size:13px;color:#374151;">' + item[1] + '</span></div>';
+        });
+      }
+      histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px;border-top:1px dashed #e5e7eb;">' +
+        '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">Alert</span>' +
+        '<span style="font-size:13px;color:#b91c1c;font-weight:500;">' + (d.alert||'') + '</span></div>';
+      document.getElementById('commHistoryBlock').innerHTML = histHtml;
+
+      /* Notes */
+      document.getElementById('profileNotes').value = d.notes || '';
+
+      /* Email button */
+      document.getElementById('profileEmailBtn').onclick = function() { openModal(name, d.reason || ''); };
+
+      document.getElementById('profilePanel').style.display = 'block';
+      document.getElementById('profilePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeProfile() {
+      document.getElementById('profilePanel').style.display = 'none';
+    }
+
+    function openModal(name, reason) {
+      document.getElementById('modalTitle').innerText = 'Outreach Draft to ' + name;
+      document.getElementById('draftText').value =
+        'Dear ' + name.split(' ')[0] + ',\n\n' +
+        'I noticed some recent academic changes related to ' + reason + '. I would like to schedule a short meeting with you this week to better understand your situation and discuss how I may support your academic planning.\n\n' +
+        'Please let me know your availability.\n\n' +
+        'Best regards,\n' +
+        'Prof. Paolo PIERSANTI';
+      document.getElementById('modalMask').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalMask').style.display = 'none';
+    }
+
+    function updateWeights() {
+      var keys = ['gpa','credit','contact','final'];
+      var total = 0;
+      keys.forEach(function(k) {
+        var v = parseInt(document.getElementById('wi-' + k).value) || 0;
+        total += v;
+        document.getElementById('fw-' + k).textContent = v;
+      });
+      var totalEl = document.getElementById('totalWeight');
+      var warnEl  = document.getElementById('weightWarning');
+      totalEl.textContent = total + '%';
+      totalEl.style.color = total === 100 ? '#15803d' : '#b91c1c';
+      warnEl.style.display = total === 100 ? 'none' : 'inline';
+    }
+
+    function resetWeights() {
+      var defaults = { gpa: 40, credit: 30, contact: 20, final: 10 };
+      Object.keys(defaults).forEach(function(k) {
+        document.getElementById('wi-' + k).value = defaults[k];
+        document.getElementById('fw-' + k).textContent = defaults[k];
+      });
+      document.getElementById('totalWeight').textContent = '100%';
+      document.getElementById('totalWeight').style.color = '#15803d';
+      document.getElementById('weightWarning').style.display = 'none';
+    }
+
+    var sortState = {};
+    function updateSortIcons(activeColumn) {
+      document.querySelectorAll('button[data-sort-col]').forEach(function(btn) {
+        var col = btn.getAttribute('data-sort-col');
+        var icon = btn.querySelector('.sort-icon');
+        if (!icon) return;
+        if (col !== activeColumn || typeof sortState[col] !== 'boolean') {
+          icon.textContent = (col === 'name') ? 'A↕' : '↕';
+          return;
+        }
+        if (col === 'name') {
+          icon.textContent = sortState[col] ? 'A↑' : 'A↓';
+        } else {
+          icon.textContent = sortState[col] ? '↑' : '↓';
+        }
+      });
+    }
+
+    function toggleSort(column) {
+      sortState[column] = !sortState[column];
+      var rows = Array.from(document.querySelectorAll('#smTableBody tr'));
+      var tbody = document.getElementById('smTableBody');
+
+      rows.sort(function(a, b) {
+        var aVal, bVal;
+        if (column === 'name') {
+          aVal = a.getAttribute('data-name') || '';
+          bVal = b.getAttribute('data-name') || '';
+          return sortState[column] ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        } else if (column === 'risk') {
+          var riskOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+          aVal = riskOrder[a.getAttribute('data-risk')] || 0;
+          bVal = riskOrder[b.getAttribute('data-risk')] || 0;
+          return sortState[column] ? aVal - bVal : bVal - aVal;
+        } else if (column === 'gpa') {
+          aVal = parseFloat(a.getAttribute('data-gpa')) || 0;
+          bVal = parseFloat(b.getAttribute('data-gpa')) || 0;
+          return sortState[column] ? aVal - bVal : bVal - aVal;
+        } else if (column === 'credits') {
+          aVal = parseInt(a.getAttribute('data-credits')) || 0;
+          bVal = parseInt(b.getAttribute('data-credits')) || 0;
+          return sortState[column] ? aVal - bVal : bVal - aVal;
+        } else if (column === 'contact') {
+          aVal = parseInt(a.getAttribute('data-days')) || 0;
+          bVal = parseInt(b.getAttribute('data-days')) || 0;
+          return sortState[column] ? aVal - bVal : bVal - aVal;
+        }
+        return 0;
+      });
+
+      rows.forEach(function(row) { tbody.appendChild(row); });
+      updateSortIcons(column);
+    }
+
+    function filterStudentList() {
+      var risk     = document.getElementById('sm-filter-risk').value;
+      var year     = document.getElementById('sm-filter-year').value;
+      var major    = document.getElementById('sm-filter-major').value;
+      var search   = document.getElementById('sm-search').value.toLowerCase();
+      var colRisk  = document.getElementById('col-risk').value;
+      var colGpa   = document.getElementById('col-gpa').value;
+      var colCred  = document.getElementById('col-credits').value;
+      var colCont  = document.getElementById('col-contact').value;
+
+      var rows = document.querySelectorAll('#smTableBody tr');
+      var visible = 0;
+      rows.forEach(function(row) {
+        var name    = (row.getAttribute('data-name') || '').toLowerCase();
+        var riskVal = row.getAttribute('data-risk') || '';
+        var gpa     = parseFloat(row.getAttribute('data-gpa')) || 0;
+        var credits = parseInt(row.getAttribute('data-credits')) || 0;
+        var days    = parseInt(row.getAttribute('data-days')) || 0;
+
+        var ok = true;
+        if (risk    !== 'all' && riskVal !== risk) ok = false;
+        if (colRisk !== 'all' && riskVal !== colRisk) ok = false;
+        if (search  && name.indexOf(search) === -1) ok = false;
+        if (colGpa === 'below3'  && gpa >= 3.0) ok = false;
+        if (colGpa === 'above3'  && gpa < 3.0)  ok = false;
+        if (colCred === 'below70' && credits >= 70) ok = false;
+        if (colCred === 'above70' && credits < 70)  ok = false;
+        if (colCont === 'recent' && days > 30)  ok = false;
+        if (colCont === 'old'    && days <= 90) ok = false;
+
+        row.style.display = ok ? '' : 'none';
+        if (ok) visible++;
+      });
+      document.getElementById('smNoResults').style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById('smTable');
+      const rows = [];
+
+      table.querySelectorAll('tr').forEach(function(row) {
+        const cells = [];
+        row.querySelectorAll('th, td').forEach(function(cell) {
+          cells.push(cell.textContent.trim());
+        });
+        rows.push(cells);
+      });
+
+      let csv = rows.map(row => row.map(cell => '"' + cell.replace(/"/g, '""') + '"').join(',')).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'Advisee_List_' + new Date().toISOString().split('T')[0] + '.csv');
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    var smActiveRow = null;
+    function openStudentProfile(name) {
+      var d = profileStudentData[name];
+      if (!d) return;
+
+      /* Highlight selected row */
+      document.querySelectorAll('#smTableBody tr').forEach(function(r) {
+        r.style.background = '';
+      });
+      var rows = document.querySelectorAll('#smTableBody tr');
+      rows.forEach(function(r) {
+        if ((r.getAttribute('data-name') || '') === name) r.style.background = '#eff6ff';
+      });
+
+      /* Fill profile */
+      document.getElementById('smProfileTitle').textContent = 'Student Profile — ' + name;
+      document.getElementById('smProfileBadges').innerHTML =
+        '<span class="badge blue">' + (d.year||'Year 3') + '</span>' +
+        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + (d.major||'Financial Mathematics') + '</span>';
+
+      /* Credit bar */
+      var pct = parseInt(d.credits||'70');
+      document.getElementById('smCreditPct').textContent = pct + '% (' + (d.creditVal||'') + ' credits)';
+      document.getElementById('smCreditBar').style.width = pct + '%';
+
+      /* Missing courses */
+      var catColors = {
+        'Major Required': ['#fee2e2','#b91c1c'],
+        'Electives':      ['#fef3c7','#92400e'],
+        'University Core':['#dbeafe','#1e40af']
+      };
+      var missingHtml = '';
+      if (d.missing) {
+        Object.keys(d.missing).forEach(function(cat) {
+          var courses = d.missing[cat];
+          if (!courses || !courses.length) return;
+          var c = catColors[cat] || ['#f3f4f6','#374151'];
+          missingHtml += '<div style="margin-bottom:9px;">';
+          missingHtml += '<div style="font-size:11px;font-weight:600;color:' + c[1] + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">' + cat + '</div>';
+          missingHtml += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+          courses.forEach(function(course) {
+            missingHtml += '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:2px 8px;border-radius:6px;font-size:12px;">' + course + '</span>';
+          });
+          missingHtml += '</div></div>';
+        });
+      }
+      document.getElementById('smMissingCourses').innerHTML = missingHtml || '<span style="font-size:13px;color:#6b7280;">No missing required courses.</span>';
+
+      /* Comm history */
+      var histHtml = '';
+      (d.history || []).forEach(function(item) {
+        histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+          '<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">' + item[0] + '</span>' +
+          '<span style="font-size:13px;color:#374151;">' + item[1] + '</span></div>';
+      });
+      histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px;border-top:1px dashed #e5e7eb;">' +
+        '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">Alert</span>' +
+        '<span style="font-size:13px;color:#b91c1c;font-weight:500;">' + (d.alert||'') + '</span></div>';
+      document.getElementById('smCommHistory').innerHTML = histHtml;
+
+      /* Notes */
+      document.getElementById('smNotes').value = d.notes || '';
+
+      /* Email button */
+      document.getElementById('smEmailBtn').onclick = function() { openModal(name, d.reason || ''); };
+
+      /* Show profile, hide placeholder */
+      document.getElementById('smProfileEmpty').style.display = 'none';
+      document.getElementById('smProfileContent').style.display = 'block';
+    }
+
+    function applyHighRiskThreshold() {
+      var threshold = parseInt(document.getElementById('th-high-risk').value) || 85;
+      var rows = document.querySelectorAll('#highRiskTable tbody tr');
+      var visible = 0;
+      rows.forEach(function(row) {
+        var score = parseInt(row.getAttribute('data-score')) || 0;
+        if (score >= threshold) { row.style.display = ''; visible++; }
+        else { row.style.display = 'none'; }
+      });
+      document.getElementById('high-risk-eg').textContent =
+        'Currently showing students with score \u2265 ' + threshold + ' in the High Risk panel above.';
+      document.getElementById('high-risk-count').textContent = visible + ' student' + (visible !== 1 ? 's' : '');
+    }
+
+    function updateThresholdDisplay() {
+      var perSem  = parseFloat(document.getElementById('th-credit-per-sem').value) || 15;
+      var gpaDrop = parseFloat(document.getElementById('th-gpa-drop').value) || 0.3;
+      var days    = parseInt(document.getElementById('th-no-contact').value) || 90;
+      document.getElementById('credit-threshold-eg').textContent =
+        'e.g. Year 3 (4 sems) flagged if credits < ' + Math.round(perSem * 4);
+      document.getElementById('gpa-threshold-eg').textContent =
+        'e.g. ' + (3.2).toFixed(2) + ' → ' + (3.2 - gpaDrop).toFixed(2) + ' triggers alert';
+      document.getElementById('contact-threshold-eg').textContent =
+        'Currently: no contact in ' + days + '+ days';
+    }
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script>
+    (function convertAllSelectsToDropdowns() {
+      function closeAllDropdowns() {
+        document.querySelectorAll('.select-replacement-wrap.open').forEach(function(wrap) {
+          wrap.classList.remove('open');
+          var btn = wrap.querySelector('.select-replacement-btn');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      function convertSelect(select, idx) {
+        if (select.dataset.replaced === '1') return;
+        select.dataset.replaced = '1';
+        select.classList.add('select-replacement-source');
+
+        var wrap = document.createElement('div');
+        wrap.className = 'select-replacement-wrap';
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'select-replacement-btn';
+        btn.setAttribute('aria-haspopup', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.innerHTML =
+          '<span class="btn-label"></span>' +
+          '<svg class="caret" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">' +
+          '<path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '</svg>';
+
+        var menu = document.createElement('div');
+        menu.className = 'select-replacement-menu';
+        menu.id = 'select-replacement-menu-' + (select.id || idx);
+
+        Array.from(select.options).forEach(function(opt, optIdx) {
+          var item = document.createElement('label');
+          item.className = 'select-replacement-item';
+
+          var input = document.createElement('input');
+          input.type = 'checkbox';
+          input.checked = opt.selected;
+
+          var text = document.createElement('span');
+          text.textContent = opt.textContent;
+
+          item.appendChild(input);
+          item.appendChild(text);
+
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            Array.from(menu.querySelectorAll('input[type="checkbox"]')).forEach(function(cb) { cb.checked = false; });
+            input.checked = true;
+            select.selectedIndex = optIdx;
+            refresh();
+            closeAllDropdowns();
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+
+          menu.appendChild(item);
+        });
+
+        function refresh() {
+          var label = btn.querySelector('.btn-label');
+          var selected = select.options[select.selectedIndex];
+          label.textContent = selected ? selected.textContent : 'Select';
+          Array.from(menu.querySelectorAll('input[type="checkbox"]')).forEach(function(cb, i) {
+            cb.checked = i === select.selectedIndex;
+          });
+        }
+
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          var isOpen = wrap.classList.contains('open');
+          closeAllDropdowns();
+          if (!isOpen) {
+            wrap.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+
+        wrap.appendChild(btn);
+        wrap.appendChild(menu);
+        select.insertAdjacentElement('afterend', wrap);
+        refresh();
+      }
+
+      function init() {
+        var SESSION_KEY = 'cuhksz_user_session';
+        var raw = sessionStorage.getItem(SESSION_KEY);
+        if (raw) {
+          try {
+            var session = JSON.parse(raw);
+            if (session.name) {
+              document.getElementById('displayUserName').textContent = session.name;
+            }
+          } catch (err) {}
+        }
+        document.querySelectorAll('select').forEach(convertSelect);
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.select-replacement-wrap')) closeAllDropdowns();
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+  <script>
+    function applyOverviewFilter() { /* Placeholder */ }
+
+    var progressPieChartObj = null;
+
+    function switchProgressChart(type) {
+      document.getElementById('progressBarView').style.display = type === 'bar' ? 'block' : 'none';
+      document.getElementById('progressPieView').style.display = type === 'pie' ? 'block' : 'none';
+      document.getElementById('btnBar').className = type === 'bar' ? 'btn' : 'btn secondary';
+      document.getElementById('btnPie').className = type === 'pie' ? 'btn' : 'btn secondary';
+      if (type === 'pie' && !progressPieChartObj) { initProgressPieChart(); }
+    }
+
+    function initProgressPieChart() {
+      progressPieChartObj = new Chart(document.getElementById('progressPieChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Major Required (18cr)', 'Electives (17cr)', 'Univ. Core (16cr)', 'Free Elective (34cr)', 'Remaining (35cr)'],
+          datasets: [{
+            data: [18, 17, 16, 34, 35],
+            backgroundColor: ['#1e3a8a', '#1d4ed8', '#3b82f6', '#93c5fd', '#e2e8f0'],
+            borderWidth: 2, borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { font: { size: 11 }, color: '#6b7280', padding: 12, boxWidth: 12 } },
+            tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed + ' credits'; } } }
+          }
+        }
+      });
+    }
+
+    /* GPA Distribution Bar Chart */
+    new Chart(document.getElementById('gpaDistChart'), {
+      type: 'bar',
+      data: {
+        labels: ['<2.0', '2.0–2.5', '2.5–3.0', '3.0–3.5', '≥3.5'],
+        datasets: [{ label: 'Students', data: [2, 8, 12, 15, 18], backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y + ' students'; } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 12 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { color: '#6b7280', font: { size: 11 }, stepSize: 5 }, beginAtZero: true }
+        }
+      }
+    });
+
+    /* GPA Trend Line Chart */
+    new Chart(document.getElementById('gpaTrendChart'), {
+      type: 'line',
+      data: {
+        labels: ['2024 Spring', '2024 Fall', '2025 Spring', '2025 Fall'],
+        datasets: [{
+          label: 'Avg GPA', data: [3.21, 3.14, 3.07, 2.98],
+          borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+          tension: 0.35, pointRadius: 5, pointBackgroundColor: '#3b82f6', fill: true, borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 1000, easing: 'easeInOutCubic' },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, min: 2.6, max: 3.5,
+            ticks: { stepSize: 0.2, callback: function(v) { return v.toFixed(1); }, color: '#6b7280', font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    /* Progress Bar Chart */
+    new Chart(document.getElementById('progressBarChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Major Required (36cr)', 'Electives (24cr)', 'Univ. Core (20cr)'],
+        datasets: [{
+          label: 'Avg Completion %', data: [50, 72, 80],
+          backgroundColor: ['#1d4ed8', '#3b82f6', '#1e40af'], borderRadius: 6, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx) {
+            var credits = [18, 17, 16]; var total = [36, 24, 20];
+            return ctx.parsed.y + '% (' + credits[ctx.dataIndex] + '/' + total[ctx.dataIndex] + 'cr)';
+          }}}
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, min: 0, max: 100,
+            ticks: { callback: function(v) { return v + '%'; }, color: '#6b7280', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>
