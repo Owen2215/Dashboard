@@ -1,6 +1,6 @@
 import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
 import { useMemo, useState, useRef } from 'react';
-import { User, Mail, LogIn, CheckCircle } from 'lucide-react';
+import { User, Mail, LogIn, LayoutDashboard } from 'lucide-react';
 
 // ── TEST MODE: Set to true to bypass credential validation ──
 const SKIP_CREDENTIALS = true;
@@ -14,7 +14,7 @@ export default function App() {
 
   const emailRule = useMemo(() => {
     return role === 'student'
-      ? { suffix: '@link.cuhk.edu.cn', next: '/student_dashboard.html' }
+      ? { suffix: '@link.cuhk.edu.cn', next: '/students-interface/student_dashboard_index.html' }
       : { suffix: '@cuhk.edu.cn', next: '/aa_dashboard.html' };
   }, [role]);
 
@@ -91,7 +91,13 @@ export default function App() {
       <section className="login-shell">
         <div className="login-card">
           <div className="login-brand">
-            <img className="login-logo" src="/assets/login-logo.svg" alt="Academic Capability Lab logo" />
+            <div
+              className="login-logo"
+              aria-hidden="true"
+              style={{ display: 'grid', placeItems: 'center', background: '#003087', color: '#ffffff' }}
+            >
+              <LayoutDashboard size={24} strokeWidth={2.2} />
+            </div>
             <div>
               <p className="eyebrow">Chinese University of Hong Kong, Shenzhen</p>
               <h1> Transcript to Insight </h1>

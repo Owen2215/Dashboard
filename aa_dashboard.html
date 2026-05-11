@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acadmeic Advisor Dashboard</title>
+  <title>Academic Advisor Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; }
     html, body { height: 100%; margin: 0; padding: 0; }
@@ -306,16 +307,16 @@
       <section id="overview" class="page active">
         <h1><b>Overview</b></h1>
         <p class="subtitle">A quick summary of the overall academic status and advising engagement of advisees.</p>
+        <div id="dataStatus" style="display:none; margin:-8px 0 14px; padding:10px 12px; border-radius:8px; font-size:13px;"></div>
 
         <div class="filters" style="margin-bottom:22px;">
           <div class="filter-dropdown">
-            <button class="filter-btn">Year: All</button>
-            <div id="yearDropdown" class="dropdown-content" style="display:none;">
-              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('year')"> Select All</label>
-              <label><input type="checkbox" value="1" onchange="applyOverviewFilter()"> Year 1</label>
-              <label><input type="checkbox" value="2" onchange="applyOverviewFilter()"> Year 2</label>
-              <label><input type="checkbox" value="3" onchange="applyOverviewFilter()"> Year 3</label>
-              <label><input type="checkbox" value="4" onchange="applyOverviewFilter()"> Year 4</label>
+            <button class="filter-btn">School: All</button>
+            <div id="schoolDropdown" class="dropdown-content" style="display:none;">
+              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('school')"> Select All</label>
+              <label><input type="checkbox" value="data-science" onchange="applyOverviewFilter()"> School of Data Science</label>
+              <label><input type="checkbox" value="management-economics" onchange="applyOverviewFilter()"> School of Management and Economics</label>
+              <label><input type="checkbox" value="humanities-science" onchange="applyOverviewFilter()"> School of Humanities and Science</label>
             </div>
           </div>
 
@@ -330,12 +331,13 @@
           </div>
 
           <div class="filter-dropdown">
-            <button class="filter-btn">School: All</button>
-            <div id="schoolDropdown" class="dropdown-content" style="display:none;">
-              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('school')"> Select All</label>
-              <label><input type="checkbox" value="data-science" onchange="applyOverviewFilter()"> School of Data Science</label>
-              <label><input type="checkbox" value="management-economics" onchange="applyOverviewFilter()"> School of Management and Economics</label>
-              <label><input type="checkbox" value="humanities-science" onchange="applyOverviewFilter()"> School of Humanities and Science</label>
+            <button class="filter-btn">Year: All</button>
+            <div id="yearDropdown" class="dropdown-content" style="display:none;">
+              <label><input type="checkbox" value="all" checked onchange="toggleSelectAll('year')"> Select All</label>
+              <label><input type="checkbox" value="1" onchange="applyOverviewFilter()"> Year 1</label>
+              <label><input type="checkbox" value="2" onchange="applyOverviewFilter()"> Year 2</label>
+              <label><input type="checkbox" value="3" onchange="applyOverviewFilter()"> Year 3</label>
+              <label><input type="checkbox" value="4" onchange="applyOverviewFilter()"> Year 4</label>
             </div>
           </div>
         </div>
@@ -350,7 +352,7 @@
             </div>
             <div style="height:22px;"></div>
             <h3>GPA Trend</h3>
-            <div style="position:relative; height:160px; margin-bottom:4px;">
+            <div style="position:relative; height:240px; margin-bottom:4px;">
               <canvas id="gpaTrendChart" role="img" aria-label="Line chart showing average GPA trend across 4 semesters from 2024 Spring to 2025 Fall, showing a slight decline">GPA trend: 2024 Spring 3.21, 2024 Fall 3.14, 2025 Spring 3.07, 2025 Fall 2.98.</canvas>
             </div>
           </div>
@@ -369,11 +371,11 @@
             <div style="display:flex; align-items:baseline; gap:10px; margin:14px 0 4px;">
               <div>
                 <div style="font-size:11px; color:#9ca3af; letter-spacing:.05em; text-transform:uppercase; margin-bottom:3px;">Avg Completion Rate</div>
-                <div style="font-size:34px; font-weight:700; color:#1f2937; line-height:1;">71%</div>
-                <div style="font-size:12px; color:#6b7280; margin-top:3px;">Avg 85 / 120 credits completed</div>
+                <div id="ov-avg-completion" style="font-size:34px; font-weight:700; color:#1f2937; line-height:1;">71%</div>
+                <div id="ov-avg-credits-note" style="font-size:12px; color:#6b7280; margin-top:3px;">Avg 85 / 120 credits completed</div>
               </div>
               <div style="flex:1; margin-left:12px;">
-                <div class="progress-line" style="height:8px; margin-bottom:0;"><div class="progress-fill" style="width:71%; background:#1d4ed8;"></div></div>
+                <div class="progress-line" style="height:8px; margin-bottom:0;"><div id="ov-avg-completion-bar" class="progress-fill" style="width:71%; background:#1d4ed8;"></div></div>
               </div>
             </div>
 
@@ -392,18 +394,18 @@
             <div style="margin-top:14px;">
               <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
                 <span style="color:#374151; font-weight:500;">Major Required</span>
-                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:50%; background:#1d4ed8;"></div></div>
-                <span style="color:#1d4ed8; font-weight:600; text-align:right;">50% <span style="color:#9ca3af; font-weight:400;">(18/36cr)</span></span>
+                <div class="progress-line" style="height:7px; margin:0;"><div id="ov-major-bar" class="progress-fill" style="width:50%; background:#1d4ed8;"></div></div>
+                <span id="ov-major-pct" style="color:#1d4ed8; font-weight:600; text-align:right;">50% <span style="color:#9ca3af; font-weight:400;">(18/36cr)</span></span>
               </div>
               <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
                 <span style="color:#374151; font-weight:500;">Electives</span>
-                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:72%; background:#3b82f6;"></div></div>
-                <span style="color:#3b82f6; font-weight:600; text-align:right;">72% <span style="color:#9ca3af; font-weight:400;">(17/24cr)</span></span>
+                <div class="progress-line" style="height:7px; margin:0;"><div id="ov-elective-bar" class="progress-fill" style="width:72%; background:#3b82f6;"></div></div>
+                <span id="ov-elective-pct" style="color:#3b82f6; font-weight:600; text-align:right;">72% <span style="color:#9ca3af; font-weight:400;">(17/24cr)</span></span>
               </div>
               <div class="course-row" style="grid-template-columns: 140px 1fr 64px; gap:10px; font-size:13px; align-items:center; margin:8px 0;">
                 <span style="color:#374151; font-weight:500;">University Core Course</span>
-                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:80%; background:#1e40af;"></div></div>
-                <span style="color:#1e40af; font-weight:600; text-align:right;">80% <span style="color:#9ca3af; font-weight:400;">(16/20cr)</span></span>
+                <div class="progress-line" style="height:7px; margin:0;"><div id="ov-core-bar" class="progress-fill" style="width:80%; background:#1e40af;"></div></div>
+                <span id="ov-core-pct" style="color:#1e40af; font-weight:600; text-align:right;">80% <span style="color:#9ca3af; font-weight:400;">(16/20cr)</span></span>
               </div>
             </div>
           </div>
@@ -416,9 +418,9 @@
             <!-- Left: Coverage metric -->
             <div>
               <div style="font-size:11px; color:#9ca3af; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px;">Communication Coverage</div>
-              <div style="font-size:40px; font-weight:700; color:#1d4ed8; line-height:1.1;">82%</div>
-              <div class="progress-line" style="height:8px; margin:10px 0 6px;"><div class="progress-fill" style="width:82%; background:#1d4ed8;"></div></div>
-              <div style="font-size:13px; color:#6b7280;">45 / 55 students contacted recently</div>
+              <div id="ov-comm-coverage" style="font-size:40px; font-weight:700; color:#1d4ed8; line-height:1.1;">82%</div>
+              <div class="progress-line" style="height:8px; margin:10px 0 6px;"><div id="ov-comm-coverage-bar" class="progress-fill" style="width:82%; background:#1d4ed8;"></div></div>
+              <div id="ov-comm-coverage-note" style="font-size:13px; color:#6b7280;">45 / 55 students contacted recently</div>
             </div>
             <!-- Right: Frequency distribution with proportions -->
             <div>
@@ -427,23 +429,23 @@
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">No contact</span>
-                    <span style="color:#ef4444; font-weight:600;">18% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">10 students</span></span>
+                    <span id="ov-comm-none" style="color:#ef4444; font-weight:600;">18% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">10 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:18%; background:#ef4444;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div id="ov-comm-none-bar" class="progress-fill" style="width:18%; background:#ef4444;"></div></div>
                 </div>
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">1–2 contacts</span>
-                    <span style="color:#3b82f6; font-weight:600;">51% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">28 students</span></span>
+                    <span id="ov-comm-1-2" style="color:#3b82f6; font-weight:600;">51% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">28 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:51%; background:#3b82f6;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div id="ov-comm-1-2-bar" class="progress-fill" style="width:51%; background:#3b82f6;"></div></div>
                 </div>
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">3+ contacts</span>
-                    <span style="color:#1d4ed8; font-weight:600;">31% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">17 students</span></span>
+                    <span id="ov-comm-3-plus" style="color:#1d4ed8; font-weight:600;">31% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">17 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:31%; background:#1d4ed8;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div id="ov-comm-3-plus-bar" class="progress-fill" style="width:31%; background:#1d4ed8;"></div></div>
                 </div>
               </div>
             </div>
@@ -462,7 +464,7 @@
               <h2 style="margin-bottom:2px;">High Risk Students</h2>
               <p style="font-size:13px; color:#6b7280; margin:0;">Students identified through multiple combined risk signals — immediate attention recommended.</p>
             </div>
-            <span class="badge red" style="font-size:14px; padding:6px 14px;">14 Students</span>
+            <span id="highRiskCountBadge" class="badge red" style="font-size:14px; padding:6px 14px;">14 Students</span>
           </div>
           <!-- Fixed-height scrollable table: shows ~2 rows, scroll for more -->
           <div style="max-height:160px; overflow-y:scroll; border:1px solid #fecaca; border-radius:8px;">
@@ -470,53 +472,10 @@
               <thead style="position:sticky; top:0; background:#fff5f5; z-index:1;">
                 <tr><th>Student</th><th>Risk Score</th><th>Reason</th><th>Last Contact</th><th>Action</th></tr>
               </thead>
-              <tbody>
-                <tr data-type="gpa contact" data-category="high" data-score="92">
-                  <td><strong>Amy Chen</strong></td>
-                  <td><span class="badge red">92</span></td>
-                  <td>GPA drop + no contact</td>
-                  <td>142 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Amy Chen','high')">View Detail</button><button class="btn" onclick="openModal('Amy Chen','GPA drop and no recent contact')">Send Email</button></td>
-                </tr>
-                <tr data-type="credit final" data-category="high" data-score="88">
-                  <td><strong>Tom Lee</strong></td>
-                  <td><span class="badge red">88</span></td>
-                  <td>Credit delay + final-year urgency</td>
-                  <td>96 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Tom Lee','high')">View Detail</button><button class="btn" onclick="openModal('Tom Lee','credit progress delay and final-year urgency')">Send Email</button></td>
-                </tr>
-                <tr data-type="gpa" data-category="high" data-score="83" style="display:none;">
-                  <td><strong>Jack Wong</strong></td>
-                  <td><span class="badge red">83</span></td>
-                  <td>GPA drop</td>
-                  <td>120 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Jack Wong','high')">View Detail</button><button class="btn" onclick="openModal('Jack Wong','GPA decline')">Send Email</button></td>
-                </tr>
-                <tr data-type="contact" data-category="high" data-score="78" style="display:none;">
-                  <td><strong>Linda Zhang</strong></td>
-                  <td><span class="badge orange-badge">78</span></td>
-                  <td>No recent advisor contact</td>
-                  <td>135 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Linda Zhang','high')">View Detail</button><button class="btn" onclick="openModal('Linda Zhang','no recent advisor contact')">Send Email</button></td>
-                </tr>
-                <tr data-type="credit" data-category="high" data-score="74" style="display:none;">
-                  <td><strong>Kevin Ng</strong></td>
-                  <td><span class="badge orange-badge">74</span></td>
-                  <td>Credit delay</td>
-                  <td>58 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Kevin Ng','high')">View Detail</button><button class="btn" onclick="openModal('Kevin Ng','credit delay')">Send Email</button></td>
-                </tr>
-                <tr data-type="gpa contact" data-category="high" data-score="71" style="display:none;">
-                  <td><strong>Sarah Liu</strong></td>
-                  <td><span class="badge orange-badge">71</span></td>
-                  <td>GPA drop + no contact</td>
-                  <td>88 days ago</td>
-                  <td><button class="btn secondary" onclick="openProfile('Sarah Liu','high')">View Detail</button><button class="btn" onclick="openModal('Sarah Liu','GPA drop and no recent contact')">Send Email</button></td>
-                </tr>
-              </tbody>
+              <tbody></tbody>
             </table>
           </div>
-          <p style="font-size:12px; color:#9ca3af; margin-top:6px; text-align:right;">Scroll to view all 14 students</p>
+          <p id="highRiskScrollHint" style="font-size:12px; color:#9ca3af; margin-top:6px; text-align:right;">Scroll to view all 14 students</p>
         </div>
 
         <!-- Risk Indicator Matrix — clickable -->
@@ -525,13 +484,13 @@
           <p style="font-size:13px; color:#6b7280; margin-bottom:14px;">Click a category to view the corresponding students below.</p>
           <div class="risk-matrix" style="grid-template-columns: repeat(3,1fr);">
             <div class="risk-card" id="rc-credit" onclick="filterMatrix('credit')" style="cursor:pointer; border:2px solid #fed7aa; transition:box-shadow .15s;">
-              <span class="badge orange-badge">Credit Alert</span><strong>9 Students</strong><p>Students falling behind expected credit progress.</p>
+              <span class="badge orange-badge">Credit Alert</span><strong id="riskCreditCount">9 Students</strong><p>Students falling behind expected credit progress.</p>
             </div>
             <div class="risk-card" id="rc-gpa" onclick="filterMatrix('gpa')" style="cursor:pointer; border:2px solid #fde68a; transition:box-shadow .15s;">
-              <span class="badge yellow">GPA Drop</span><strong>11 Students</strong><p>Students with significant GPA decline.</p>
+              <span class="badge yellow">GPA Drop</span><strong id="riskGpaCount">11 Students</strong><p>Students with significant GPA decline.</p>
             </div>
             <div class="risk-card" id="rc-contact" onclick="filterMatrix('contact')" style="cursor:pointer; border:2px solid #bfdbfe; transition:box-shadow .15s;">
-              <span class="badge blue">No Contact</span><strong>18 Students</strong><p>Students who have not met their advisor recently.</p>
+              <span class="badge blue">No Contact</span><strong id="riskContactCount">18 Students</strong><p>Students who have not met their advisor recently.</p>
             </div>
           </div>
         </div>
@@ -554,28 +513,7 @@
           </div>
           <table id="riskTable">
             <thead><tr><th>Student</th><th>Risk Score</th><th>Reason</th><th>Last Contact</th><th>Action</th></tr></thead>
-            <tbody>
-              <tr data-type="gpa contact" data-category="high gpa contact">
-                <td>Amy Chen</td><td><span class="badge red">92</span></td><td>GPA drop + no contact</td><td>142 days ago</td>
-                <td><button class="btn secondary" onclick="openProfile('Amy Chen','risk')">View Detail</button><button class="btn" onclick="openModal('Amy Chen','GPA drop and no recent contact')">Send Email</button></td>
-              </tr>
-              <tr data-type="credit final" data-category="high credit">
-                <td>Tom Lee</td><td><span class="badge red">88</span></td><td>Credit delay + final-year urgency</td><td>96 days ago</td>
-                <td><button class="btn secondary" onclick="openProfile('Tom Lee','risk')">View Detail</button><button class="btn" onclick="openModal('Tom Lee','credit progress delay')">Send Email</button></td>
-              </tr>
-              <tr data-type="gpa" data-category="gpa">
-                <td>Jack Wong</td><td><span class="badge orange-badge">83</span></td><td>GPA drop</td><td>120 days ago</td>
-                <td><button class="btn secondary" onclick="openProfile('Jack Wong','risk')">View Detail</button><button class="btn" onclick="openModal('Jack Wong','GPA decline')">Send Email</button></td>
-              </tr>
-              <tr data-type="contact" data-category="contact">
-                <td>Linda Zhang</td><td><span class="badge yellow">76</span></td><td>No recent advisor contact</td><td>135 days ago</td>
-                <td><button class="btn secondary" onclick="openProfile('Linda Zhang','risk')">View Detail</button><button class="btn" onclick="openModal('Linda Zhang','no recent advisor contact')">Send Email</button></td>
-              </tr>
-              <tr data-type="credit" data-category="credit">
-                <td>Kevin Ng</td><td><span class="badge yellow">71</span></td><td>Credit delay</td><td>58 days ago</td>
-                <td><button class="btn secondary" onclick="openProfile('Kevin Ng','risk')">View Detail</button><button class="btn" onclick="openModal('Kevin Ng','credit delay')">Send Email</button></td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
 
@@ -616,13 +554,13 @@
                 </svg>
               </div>
 
-              <h3 style="margin-bottom:10px;">Credit Completion</h3>
+              <h3 style="margin-bottom:10px;">Credits</h3>
               <div style="margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                   <span style="color:#374151; font-weight:500;">Overall</span>
-                  <span style="color:#1d4ed8; font-weight:600;">70% <span style="color:#9ca3af; font-weight:400;">(84/120cr)</span></span>
+                  <span id="profileCreditText" style="color:#1d4ed8; font-weight:600;">70% <span style="color:#9ca3af; font-weight:400;">(84/120cr)</span></span>
                 </div>
-                <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:70%; background:#1d4ed8;"></div></div>
+                <div class="progress-line" style="height:7px; margin:0;"><div id="profileCreditBar" class="progress-fill" style="width:70%; background:#1d4ed8;"></div></div>
               </div>
 
               <h3 style="margin-bottom:10px; margin-top:14px;">Missing / Incomplete Courses</h3>
@@ -823,6 +761,7 @@
           </select>
           <select id="sm-filter-year" onchange="filterStudentList()" style="flex:1; min-width:120px;">
             <option value="all">Year: All</option>
+            <option value="Year 1">Year 1</option>
             <option value="Year 2">Year 2</option>
             <option value="Year 3">Year 3</option>
             <option value="Year 4">Year 4</option>
@@ -871,6 +810,7 @@
                       </button>
                     </th>
                     <th style="padding:6px 4px; width:17%;">
+                      <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;">Risk Level</div>
                       <div style="display:flex; gap:3px; align-items:center;">
                         <select id="col-risk" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
                           <option value="all">All</option>
@@ -884,6 +824,7 @@
                       </div>
                     </th>
                     <th style="padding:6px 4px; width:17%;">
+                      <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;">GPA</div>
                       <div style="display:flex; gap:3px; align-items:center;">
                         <select id="col-gpa" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
                           <option value="all">All</option>
@@ -896,6 +837,7 @@
                       </div>
                     </th>
                     <th style="padding:6px 4px; width:17%;">
+                      <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;">Credits</div>
                       <div style="display:flex; gap:3px; align-items:center;">
                         <select id="col-credits" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
                           <option value="all">All</option>
@@ -908,6 +850,7 @@
                       </div>
                     </th>
                     <th style="padding:6px 4px; width:27%;">
+                      <div style="font-size:11px; font-weight:700; color:#6b7280; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em;">Last Contact</div>
                       <div style="display:flex; gap:3px; align-items:center;">
                         <select id="col-contact" onchange="filterStudentList()" style="font-size:11px; padding:3px 4px; border-radius:4px; border:1px solid #e5e7eb; background:white; width:100%; min-width:0;">
                           <option value="all">All</option>
@@ -921,38 +864,7 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody id="smTableBody">
-                  <tr data-name="Amy Chen" data-risk="High" data-gpa="2.61" data-credits="68" data-days="142" onclick="openStudentProfile('Amy Chen')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Amy Chen</td>
-                    <td style="width:120px;"><span class="badge red">High</span></td>
-                    <td style="width:120px;">2.61</td><td style="width:120px;">68%</td><td style="width:160px;">142 days ago</td>
-                  </tr>
-                  <tr data-name="Tom Lee" data-risk="Medium" data-gpa="2.94" data-credits="74" data-days="96" onclick="openStudentProfile('Tom Lee')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Tom Lee</td>
-                    <td><span class="badge orange-badge">Medium</span></td>
-                    <td>2.94</td><td>74%</td><td>96 days ago</td>
-                  </tr>
-                  <tr data-name="Jack Wong" data-risk="High" data-gpa="2.48" data-credits="70" data-days="120" onclick="openStudentProfile('Jack Wong')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Jack Wong</td>
-                    <td><span class="badge red">High</span></td>
-                    <td>2.48</td><td>70%</td><td>120 days ago</td>
-                  </tr>
-                  <tr data-name="Linda Zhang" data-risk="Low" data-gpa="3.42" data-credits="86" data-days="21" onclick="openStudentProfile('Linda Zhang')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Linda Zhang</td>
-                    <td><span class="badge green-badge">Low</span></td>
-                    <td>3.42</td><td>86%</td><td>21 days ago</td>
-                  </tr>
-                  <tr data-name="Kevin Ng" data-risk="Medium" data-gpa="3.01" data-credits="62" data-days="58" onclick="openStudentProfile('Kevin Ng')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Kevin Ng</td>
-                    <td><span class="badge orange-badge">Medium</span></td>
-                    <td>3.01</td><td>62%</td><td>58 days ago</td>
-                  </tr>
-                  <tr data-name="Sarah Liu" data-risk="High" data-gpa="2.55" data-credits="65" data-days="88" onclick="openStudentProfile('Sarah Liu')" style="cursor:pointer;" class="sm-row">
-                    <td style="font-weight:600;">Sarah Liu</td>
-                    <td><span class="badge red">High</span></td>
-                    <td>2.55</td><td>65%</td><td>88 days ago</td>
-                  </tr>
-                </tbody>
+                <tbody id="smTableBody"></tbody>
               </table>
             </div>
             <div id="smNoResults" style="display:none; padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No students match the current filters.</div>
@@ -996,7 +908,7 @@
                       <text x="380" y="100" text-anchor="middle" font-size="9" fill="#9ca3af">Fa'25</text>
                     </svg>
                   </div>
-                  <h3 style="margin-bottom:6px; font-size:14px;">Credit Completion</h3>
+                  <h3 style="margin-bottom:6px; font-size:14px;">Credits</h3>
                   <div style="margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
                       <span style="color:#374151; font-weight:500;">Overall</span>
@@ -1243,33 +1155,7 @@
       document.getElementById('priorityCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    var profileStudentData = {
-      'Amy Chen':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '2.61', credits: '70%', creditVal: '84/120', reason: 'GPA drop and no recent contact',
-        history: [['Mar 10','Discussed GPA decline — student expressed stress about coursework.'],['Apr 02','Follow-up meeting planned — not yet confirmed.']],
-        alert: 'Last contact over 120 days ago', notes: 'Student may need academic planning support and follow-up meeting. Consider discussing course load reduction options.',
-        missing: { 'Major Required': ['MAT3002','STA2001'], 'Electives': ['FIN3010'], 'University Core': ['GEC1000'] }
-      },
-      'Tom Lee':   { year: 'Year 4', major: 'Financial Mathematics', gpa: '2.94', credits: '74%', creditVal: '89/120', reason: 'credit progress delay and final-year urgency',
-        history: [['Feb 18','Reviewed graduation requirements — 3 major required courses outstanding.'],['Mar 30','Discussed adding summer session courses.']],
-        alert: 'Last contact 96 days ago', notes: 'Final-year student at risk of delayed graduation. Urgent course planning needed.',
-        missing: { 'Major Required': ['MAT4001','FIN4002','STA3001'], 'Electives': [], 'University Core': [] }
-      },
-      'Jack Wong':  { year: 'Year 2', major: 'Financial Mathematics', gpa: '2.48', credits: '70%', creditVal: '42/60', reason: 'GPA decline',
-        history: [['Jan 15','Initial advising session — academic goals discussed.'],['Feb 28','Midterm check-in — student flagged difficulty in MAT courses.']],
-        alert: 'Last contact 120 days ago', notes: 'GPA has declined two consecutive semesters. Early intervention recommended.',
-        missing: { 'Major Required': ['MAT2001'], 'Electives': ['FIN2005'], 'University Core': [] }
-      },
-      'Linda Zhang':{ year: 'Year 3', major: 'Financial Mathematics', gpa: '3.42', credits: '86%', creditVal: '103/120', reason: 'no recent advisor contact',
-        history: [['Nov 20','Routine check-in — student performing well.']],
-        alert: 'Last contact 135 days ago', notes: 'Strong academic performance. Low risk but overdue for check-in.',
-        missing: { 'Major Required': [], 'Electives': ['FIN3015'], 'University Core': [] }
-      },
-      'Kevin Ng':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '3.01', credits: '62%', creditVal: '74/120', reason: 'credit delay',
-        history: [['Mar 05','Discussed course load — student requested to drop one course.'],['Apr 10','Follow-up on credit plan.']],
-        alert: 'Last contact 58 days ago', notes: 'Behind on credit completion. Needs to add courses next semester to stay on track.',
-        missing: { 'Major Required': ['MAT3005'], 'Electives': ['FIN3008','FIN3012'], 'University Core': ['GEC2000'] }
-      }
-    };
+    var profileStudentData = {};
 
     function openProfile(name, context) {
       var d = profileStudentData[name] || {};
@@ -1280,12 +1166,13 @@
 
       /* Credit bar */
       var pct = parseInt(d.credits||'70');
-      document.getElementById('profilePanel').querySelector('.progress-fill').style.width = pct + '%';
-      document.getElementById('profilePanel').querySelector('.progress-fill').parentElement.previousElementSibling
-        && (document.getElementById('profilePanel').querySelector('[data-credit]') || null);
-
-      /* Update overall credit text */
-      var creditSpans = document.getElementById('profilePanel').querySelectorAll('span[data-role]');
+      var creditVal = (d.creditVal || '84/120');
+      var bar = document.getElementById('profileCreditBar');
+      if (bar) bar.style.width = pct + '%';
+      var text = document.getElementById('profileCreditText');
+      if (text) {
+        text.innerHTML = pct + '% <span style="color:#9ca3af; font-weight:400;">(' + creditVal + 'cr)</span>';
+      }
 
       /* Missing courses */
       var missingHtml = '';
@@ -1706,9 +1593,568 @@
     })();
   </script>
   <script>
-    function applyOverviewFilter() { /* Placeholder */ }
-
+    var dashboardData = null;
+    var gpaDistChartObj = null;
+    var gpaTrendChartObj = null;
+    var progressBarChartObj = null;
     var progressPieChartObj = null;
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJs(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function reasonType(tags) {
+      return (tags && tags.length) ? tags.join(' ') : 'monitor';
+    }
+
+    function daysLabel(days) {
+      if (days >= 999) return 'No record';
+      return days + ' days ago';
+    }
+
+    function riskBadgeClass(level, score) {
+      if (level === 'High' || score >= 85) return 'red';
+      if (level === 'Medium' || score >= 70) return 'orange-badge';
+      return 'green-badge';
+    }
+
+    function riskLabelClass(level, score) {
+      if (level === 'High' || score >= 85) return 'red';
+      if (level === 'Medium' || score >= 70) return 'orange-badge';
+      return 'yellow';
+    }
+
+    function summarizeCommunication(history, noContactDays) {
+      var out = [];
+      (history || []).slice(0, 4).forEach(function(h) {
+        var label = (h.date || '').slice(5).replace('-', '/');
+        if (!label) label = 'N/A';
+        var type = h.type ? (h.type + ': ') : '';
+        out.push([label, type + (h.notes || 'Contact record')]);
+      });
+      return {
+        history: out,
+        alert: noContactDays > 90 ? ('Last contact ' + noContactDays + ' days ago') : 'Contact status within threshold'
+      };
+    }
+
+    function buildProfileData(students) {
+      profileStudentData = {};
+      (students || []).forEach(function(s) {
+        var comm = summarizeCommunication(s.history, s.last_contact_days);
+        profileStudentData[s.name] = {
+          year: s.year_label,
+          major: s.major,
+          gpa: (typeof s.gpa === 'number' ? s.gpa.toFixed(2) : (s.gpa || '0.00')),
+          credits: Math.round(s.completion_pct || 0) + '%',
+          creditVal: (s.total_credits || 0) + '/120',
+          reason: s.reason_text || '',
+          history: comm.history,
+          alert: comm.alert,
+          notes: s.notes || '',
+          missing: s.missing_courses || { 'Major Required': [], 'Electives': [], 'University Core': [] }
+        };
+      });
+    }
+
+    function renderHighRiskTable(students) {
+      var tbody = document.querySelector('#highRiskTable tbody');
+      if (!tbody) return;
+      var rows = (students || []).slice().sort(function(a, b) { return b.risk_score - a.risk_score; }).slice(0, 14);
+      tbody.innerHTML = rows.map(function(s) {
+        var cls = riskLabelClass(s.risk_level, s.risk_score);
+        var nameEsc = escapeHtml(s.name);
+        var nameJs = escapeJs(s.name);
+        return '<tr data-type="' + escapeHtml(reasonType(s.risk_tags)) + '" data-category="high" data-score="' + s.risk_score + '">' +
+          '<td><strong>' + nameEsc + '</strong></td>' +
+          '<td><span class="badge ' + cls + '">' + s.risk_score + '</span></td>' +
+          '<td>' + escapeHtml(s.reason_text || 'General monitoring') + '</td>' +
+          '<td>' + escapeHtml(daysLabel(s.last_contact_days)) + '</td>' +
+          '<td><button class="btn secondary" onclick="openProfile(\'' + nameJs + '\',\'high\')">View Detail</button>' +
+          '<button class="btn" onclick="openModal(\'' + nameJs + '\',\'' + escapeJs(s.reason_text || '') + '\')">Send Email</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function renderPriorityRiskTable(students) {
+      var tbody = document.querySelector('#riskTable tbody');
+      if (!tbody) return;
+      var rows = (students || []).slice().sort(function(a, b) { return b.risk_score - a.risk_score; });
+      tbody.innerHTML = rows.map(function(s) {
+        var cls = riskLabelClass(s.risk_level, s.risk_score);
+        var categories = [];
+        if (s.risk_score >= 85) categories.push('high');
+        (s.risk_tags || []).forEach(function(t) { categories.push(t); });
+        var nameEsc = escapeHtml(s.name);
+        var nameJs = escapeJs(s.name);
+        return '<tr data-type="' + escapeHtml(reasonType(s.risk_tags)) + '" data-category="' + escapeHtml(categories.join(' ')) + '">' +
+          '<td>' + nameEsc + '</td>' +
+          '<td><span class="badge ' + cls + '">' + s.risk_score + '</span></td>' +
+          '<td>' + escapeHtml(s.reason_text || 'General monitoring') + '</td>' +
+          '<td>' + escapeHtml(daysLabel(s.last_contact_days)) + '</td>' +
+          '<td><button class="btn secondary" onclick="openProfile(\'' + nameJs + '\',\'risk\')">View Detail</button>' +
+          '<button class="btn" onclick="openModal(\'' + nameJs + '\',\'' + escapeJs(s.reason_text || '') + '\')">Send Email</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function renderStudentManagementTable(students) {
+      var tbody = document.getElementById('smTableBody');
+      if (!tbody) return;
+      var rows = (students || []).slice().sort(function(a, b) { return b.risk_score - a.risk_score; });
+      tbody.innerHTML = rows.map(function(s) {
+        var cls = riskBadgeClass(s.risk_level, s.risk_score);
+        var nameEsc = escapeHtml(s.name);
+        var nameJs = escapeJs(s.name);
+        return '<tr data-name="' + nameEsc + '" data-risk="' + escapeHtml(s.risk_level) + '" data-gpa="' + s.gpa + '" data-credits="' + Math.round(s.completion_pct || 0) + '" data-days="' + s.last_contact_days + '" onclick="openStudentProfile(\'' + nameJs + '\')" style="cursor:pointer;" class="sm-row">' +
+          '<td style="font-weight:600;">' + nameEsc + '</td>' +
+          '<td><span class="badge ' + cls + '">' + escapeHtml(s.risk_level) + '</span></td>' +
+          '<td>' + escapeHtml((typeof s.gpa === 'number' ? s.gpa.toFixed(2) : String(s.gpa || '0.00'))) + '</td>' +
+          '<td>' + Math.round(s.completion_pct || 0) + '%</td>' +
+          '<td>' + escapeHtml(daysLabel(s.last_contact_days)) + '</td>' +
+          '</tr>';
+      }).join('');
+      filterStudentList();
+    }
+
+    function fillSelectOptions(selectId, values, labelPrefix) {
+      var el = document.getElementById(selectId);
+      if (!el) return;
+      var old = el.value;
+      var opts = ['<option value="all">' + labelPrefix + ': All</option>'];
+      values.forEach(function(v) { opts.push('<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>'); });
+      el.innerHTML = opts.join('');
+      el.value = values.indexOf(old) !== -1 ? old : 'all';
+    }
+
+    function buildOverviewCheckboxes(dropdownId, values, filterType, labelFn) {
+      var box = document.getElementById(dropdownId);
+      if (!box) return;
+      var html = '<label><input type="checkbox" value="all" checked onchange="toggleSelectAll(\'' + filterType + '\')"> Select All</label>';
+      values.forEach(function(v) {
+        html += '<label><input type="checkbox" value="' + escapeHtml(v) + '" checked onchange="applyOverviewFilter()"> ' + escapeHtml(labelFn(v)) + '</label>';
+      });
+      box.innerHTML = html;
+    }
+
+    function getAllowedMajorsBySchools(schoolVals) {
+      if (!dashboardData || !Array.isArray(dashboardData.students)) return [];
+      var allowed = dashboardData.students.filter(function(s) {
+        if (schoolVals === null) return true; // "All" selected
+        if (!schoolVals.length) return false; // nothing selected
+        return schoolVals.indexOf(String(s.school)) !== -1;
+      }).map(function(s) {
+        return String(s.major);
+      });
+      return Array.from(new Set(allowed)).sort();
+    }
+
+    function syncMajorOptionsBySchool() {
+      if (!dashboardData) return;
+      var schoolVals = getSelectedDropdownValues('schoolDropdown');
+      var prevMajorVals = getSelectedDropdownValues('majorDropdown');
+      var allowedMajors = getAllowedMajorsBySchools(schoolVals);
+
+      buildOverviewCheckboxes('majorDropdown', allowedMajors, 'major', function(v) { return v; });
+
+      var box = document.getElementById('majorDropdown');
+      if (!box) return;
+      var details = Array.from(box.querySelectorAll('input[type="checkbox"]')).slice(1);
+      var keepSet = new Set(Array.isArray(prevMajorVals) ? prevMajorVals : []);
+      var keptCount = 0;
+
+      details.forEach(function(cb) {
+        var keep = keepSet.has(cb.value);
+        cb.checked = keep;
+        if (keep) keptCount++;
+      });
+
+      if (prevMajorVals === null) {
+        details.forEach(function(cb) { cb.checked = true; });
+      } else if (prevMajorVals.length > 0 && keptCount === 0) {
+        // If previously selected majors become unavailable after school change, default to all available.
+        details.forEach(function(cb) { cb.checked = true; });
+      }
+
+      var allCb = box.querySelector('input[value="all"]');
+      if (allCb) {
+        allCb.checked = details.length > 0 && details.every(function(cb) { return cb.checked; });
+      }
+    }
+
+    function getSelectedDropdownValues(dropdownId) {
+      var box = document.getElementById(dropdownId);
+      if (!box) return [];
+      var cbs = Array.from(box.querySelectorAll('input[type="checkbox"]'));
+      if (!cbs.length) return [];
+      var detail = cbs.slice(1);
+      var selected = detail.filter(function(cb) { return cb.checked; }).map(function(cb) { return cb.value; });
+      var allChecked = detail.length > 0 && detail.every(function(cb) { return cb.checked; });
+      cbs[0].checked = allChecked;
+      if (allChecked) return null; // explicit "All"
+      return selected;
+    }
+
+    function updateOverviewFilterButtonLabels() {
+      var mapping = [
+        { dropdownId: 'yearDropdown', prefix: 'Year' },
+        { dropdownId: 'majorDropdown', prefix: 'Major' },
+        { dropdownId: 'schoolDropdown', prefix: 'School' }
+      ];
+
+      mapping.forEach(function(item) {
+        var box = document.getElementById(item.dropdownId);
+        if (!box) return;
+        var container = box.closest('.filter-dropdown');
+        if (!container) return;
+        var btn = container.querySelector('.filter-btn');
+        if (!btn) return;
+
+        var labels = Array.from(box.querySelectorAll('label'));
+        var detailLabels = labels.slice(1);
+        var checked = detailLabels.filter(function(label) {
+          var cb = label.querySelector('input[type="checkbox"]');
+          return cb && cb.checked;
+        }).map(function(label) {
+          return label.textContent.trim();
+        });
+
+        var allChecked = detailLabels.length > 0 && checked.length === detailLabels.length;
+        if (allChecked) {
+          btn.textContent = item.prefix + ': All';
+          return;
+        }
+        if (checked.length === 0) {
+          btn.textContent = item.prefix + ': None';
+          return;
+        }
+
+        if (checked.length === 1) {
+          btn.textContent = item.prefix + ': ' + checked[0];
+          return;
+        }
+
+        btn.textContent = item.prefix + ': ' + checked[0] + ' +' + (checked.length - 1);
+      });
+    }
+
+    function semesterSortKey(sem) {
+      var m = String(sem || '').match(/^(\d{4})-(\d{2})\s+(Term\s+\d+|Summer)$/);
+      if (!m) return [9999, 9, String(sem || '')];
+      var year = parseInt(m[1], 10);
+      var tail = m[3];
+      var phase = tail === 'Term 1' ? 1 : (tail === 'Term 2' ? 2 : 3);
+      return [year, phase, sem];
+    }
+
+    function calcOverviewFromStudents(students) {
+      var total = students.length || 1;
+      var dist = [0, 0, 0, 0, 0];
+      var totalCompletion = 0;
+      var totalCredits = 0;
+      var recent = 0;
+      var none = 0;
+      var c12 = 0;
+      var c3p = 0;
+      var majorCourses = 0;
+      var electiveCourses = 0;
+      var coreCourses = 0;
+      var sem = {};
+
+      students.forEach(function(s) {
+        var g = parseFloat(s.gpa) || 0;
+        if (g < 2.0) dist[0]++; else if (g < 2.5) dist[1]++; else if (g < 3.0) dist[2]++; else if (g < 3.5) dist[3]++; else dist[4]++;
+        totalCompletion += parseFloat(s.completion_pct || 0);
+        totalCredits += parseInt(s.total_credits || 0, 10);
+        if ((s.last_contact_days || 999) <= 90) recent++;
+        var cc = parseInt(s.contacts_count || 0, 10);
+        if (cc === 0) none++; else if (cc <= 2) c12++; else c3p++;
+        var cp = s.category_progress || {};
+        majorCourses += parseInt(cp.major_courses || 0, 10);
+        coreCourses += parseInt(cp.core_courses || 0, 10);
+        electiveCourses += parseInt(cp.elective_courses || 0, 10);
+        (s.gpa_terms || []).forEach(function(t) {
+          if (!t.semester || t.term_gpa == null) return;
+          sem[t.semester] = sem[t.semester] || [];
+          sem[t.semester].push(parseFloat(t.term_gpa));
+        });
+      });
+
+      var majorCredits = majorCourses * 3;
+      var coreCredits = coreCourses * 3;
+      var electiveCredits = electiveCourses * 3;
+      var totalDone = majorCredits + coreCredits + electiveCredits;
+      var totalExpected = Math.max(120 * students.length, totalDone);
+      var remaining = Math.max(0, totalExpected - totalDone);
+      var majorTarget = Math.max(1, Math.round(totalExpected * 0.30));
+      var electiveTarget = Math.max(1, Math.round(totalExpected * 0.20));
+      var coreTarget = Math.max(1, Math.round(totalExpected * 0.17));
+
+      var trend = Object.keys(sem).map(function(k) {
+        var vals = sem[k];
+        var avg = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
+        return { semester: k, avg: avg };
+      }).sort(function(a, b) {
+        var ka = semesterSortKey(a.semester);
+        var kb = semesterSortKey(b.semester);
+        if (ka[0] !== kb[0]) return ka[0] - kb[0];
+        if (ka[1] !== kb[1]) return ka[1] - kb[1];
+        return String(ka[2]).localeCompare(String(kb[2]));
+      });
+
+      return {
+        gpa_distribution: { values: dist },
+        gpa_trend: {
+          labels: trend.map(function(t) { return t.semester; }),
+          values: trend.map(function(t) { return Number(t.avg.toFixed(3)); })
+        },
+        progress: {
+          avg_completion_pct: Number((totalCompletion / total).toFixed(1)),
+          avg_credits_done: Number((totalCredits / total).toFixed(1)),
+          avg_credits_total: 120,
+          major: { done: majorCredits, target: majorTarget, pct: Number((Math.min(100, majorCredits / majorTarget * 100)).toFixed(1)) },
+          elective: { done: electiveCredits, target: electiveTarget, pct: Number((Math.min(100, electiveCredits / electiveTarget * 100)).toFixed(1)) },
+          core: { done: coreCredits, target: coreTarget, pct: Number((Math.min(100, coreCredits / coreTarget * 100)).toFixed(1)) },
+          pie: { major: majorCredits, elective: electiveCredits, core: coreCredits, remaining: remaining }
+        },
+        communication: {
+          total_students: students.length,
+          recently_contacted: recent,
+          no_contact: none,
+          contacts_1_2: c12,
+          contacts_3_plus: c3p
+        }
+      };
+    }
+
+    function updateOverviewUI(overview) {
+      if (!overview) return;
+      var progress = overview.progress || {};
+      var comm = overview.communication || {};
+
+      var avgPct = Number(progress.avg_completion_pct || 0);
+      var avgDone = Number(progress.avg_credits_done || 0);
+      var avgTotal = Number(progress.avg_credits_total || 120);
+      var m = progress.major || { pct: 0, done: 0, target: 1 };
+      var e = progress.elective || { pct: 0, done: 0, target: 1 };
+      var c = progress.core || { pct: 0, done: 0, target: 1 };
+
+      document.getElementById('ov-avg-completion').textContent = Math.round(avgPct) + '%';
+      document.getElementById('ov-avg-credits-note').textContent = 'Avg ' + avgDone + ' / ' + avgTotal + ' credits completed';
+      document.getElementById('ov-avg-completion-bar').style.width = Math.round(avgPct) + '%';
+
+      document.getElementById('ov-major-bar').style.width = Math.round(m.pct) + '%';
+      document.getElementById('ov-major-pct').innerHTML = Math.round(m.pct) + '% <span style="color:#9ca3af; font-weight:400;">(' + m.done + '/' + m.target + 'cr)</span>';
+      document.getElementById('ov-elective-bar').style.width = Math.round(e.pct) + '%';
+      document.getElementById('ov-elective-pct').innerHTML = Math.round(e.pct) + '% <span style="color:#9ca3af; font-weight:400;">(' + e.done + '/' + e.target + 'cr)</span>';
+      document.getElementById('ov-core-bar').style.width = Math.round(c.pct) + '%';
+      document.getElementById('ov-core-pct').innerHTML = Math.round(c.pct) + '% <span style="color:#9ca3af; font-weight:400;">(' + c.done + '/' + c.target + 'cr)</span>';
+
+      var totalStudents = Number(comm.total_students || 0);
+      var recent = Number(comm.recently_contacted || 0);
+      var pRecent = totalStudents ? Math.round((recent / totalStudents) * 100) : 0;
+      var pNone = totalStudents ? Math.round((Number(comm.no_contact || 0) / totalStudents) * 100) : 0;
+      var p12 = totalStudents ? Math.round((Number(comm.contacts_1_2 || 0) / totalStudents) * 100) : 0;
+      var p3 = totalStudents ? Math.round((Number(comm.contacts_3_plus || 0) / totalStudents) * 100) : 0;
+
+      document.getElementById('ov-comm-coverage').textContent = pRecent + '%';
+      document.getElementById('ov-comm-coverage-bar').style.width = pRecent + '%';
+      document.getElementById('ov-comm-coverage-note').textContent = recent + ' / ' + totalStudents + ' students contacted recently';
+      document.getElementById('ov-comm-none').innerHTML = pNone + '% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">' + (comm.no_contact || 0) + ' students</span>';
+      document.getElementById('ov-comm-none-bar').style.width = pNone + '%';
+      document.getElementById('ov-comm-1-2').innerHTML = p12 + '% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">' + (comm.contacts_1_2 || 0) + ' students</span>';
+      document.getElementById('ov-comm-1-2-bar').style.width = p12 + '%';
+      document.getElementById('ov-comm-3-plus').innerHTML = p3 + '% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">' + (comm.contacts_3_plus || 0) + ' students</span>';
+      document.getElementById('ov-comm-3-plus-bar').style.width = p3 + '%';
+
+      if (gpaDistChartObj && overview.gpa_distribution && overview.gpa_distribution.values) {
+        gpaDistChartObj.data.datasets[0].data = overview.gpa_distribution.values;
+        gpaDistChartObj.update();
+      }
+      if (gpaTrendChartObj && overview.gpa_trend && overview.gpa_trend.labels && overview.gpa_trend.values) {
+        gpaTrendChartObj.data.labels = overview.gpa_trend.labels;
+        gpaTrendChartObj.data.datasets[0].data = overview.gpa_trend.values;
+        var gpaVals = overview.gpa_trend.values
+          .map(function(v) { return Number(v); })
+          .filter(function(v) { return Number.isFinite(v); });
+        if (gpaVals.length) {
+          var minV = Math.min.apply(null, gpaVals);
+          var maxV = Math.max.apply(null, gpaVals);
+          var lower = Math.max(0, Math.floor((minV - 0.12) * 10) / 10);
+          var upper = Math.min(4.3, Math.ceil((maxV + 0.12) * 10) / 10);
+          if ((upper - lower) < 0.4) {
+            upper = Math.min(4.3, lower + 0.4);
+          }
+          gpaTrendChartObj.options.scales.y.min = lower;
+          gpaTrendChartObj.options.scales.y.max = upper;
+        }
+        gpaTrendChartObj.update();
+      }
+      if (progressBarChartObj && progress.major && progress.elective && progress.core) {
+        progressBarChartObj.data.labels = [
+          'Major Required (' + progress.major.target + 'cr)',
+          'Electives (' + progress.elective.target + 'cr)',
+          'Univ. Core (' + progress.core.target + 'cr)'
+        ];
+        progressBarChartObj.data.datasets[0].data = [progress.major.pct, progress.elective.pct, progress.core.pct];
+        progressBarChartObj.update();
+      }
+      if (progressPieChartObj && progress.pie) {
+        progressPieChartObj.data.labels = [
+          'Major Required (' + progress.pie.major + 'cr)',
+          'Electives (' + progress.pie.elective + 'cr)',
+          'Univ. Core (' + progress.pie.core + 'cr)',
+          'Remaining (' + progress.pie.remaining + 'cr)'
+        ];
+        progressPieChartObj.data.datasets[0].data = [progress.pie.major, progress.pie.elective, progress.pie.core, progress.pie.remaining];
+        progressPieChartObj.update();
+      }
+    }
+
+    function updateRiskSummary(summary, students) {
+      if (!summary) return;
+      var highCount = Number(summary.high_risk_count || 0);
+      document.getElementById('highRiskCountBadge').textContent = highCount + ' Students';
+      document.getElementById('highRiskScrollHint').textContent = 'Scroll to view top ' + Math.min((students || []).length, 14) + ' students';
+      document.getElementById('riskCreditCount').textContent = (summary.credit_alert_count || 0) + ' Students';
+      document.getElementById('riskGpaCount').textContent = (summary.gpa_drop_count || 0) + ' Students';
+      document.getElementById('riskContactCount').textContent = (summary.no_contact_count || 0) + ' Students';
+    }
+
+    function setDataStatus(message, type) {
+      var el = document.getElementById('dataStatus');
+      if (!el) return;
+      if (!message) {
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+      }
+      el.style.display = 'block';
+      el.textContent = message;
+      if (type === 'error') {
+        el.style.background = '#fef2f2';
+        el.style.border = '1px solid #fecaca';
+        el.style.color = '#991b1b';
+      } else if (type === 'ok') {
+        el.style.background = '#ecfdf5';
+        el.style.border = '1px solid #bbf7d0';
+        el.style.color = '#166534';
+      } else {
+        el.style.background = '#eff6ff';
+        el.style.border = '1px solid #bfdbfe';
+        el.style.color = '#1e40af';
+      }
+    }
+
+    async function fetchDashboardPayload() {
+      var candidates = [];
+      var sameOrigin = window.location.origin + '/api/advising/dashboard';
+      candidates.push(sameOrigin);
+      candidates.push('/api/advising/dashboard');
+      candidates.push('http://localhost:8080/api/advising/dashboard');
+      candidates.push('http://127.0.0.1:8080/api/advising/dashboard');
+
+      var dedup = [];
+      candidates.forEach(function(u) { if (dedup.indexOf(u) === -1) dedup.push(u); });
+
+      var lastErr = null;
+      for (var i = 0; i < dedup.length; i++) {
+        var url = dedup[i];
+        try {
+          var res = await fetch(url, { credentials: 'same-origin' });
+          if (!res.ok) throw new Error('HTTP ' + res.status + ' at ' + url);
+          var data = await res.json();
+          if (!data || !Array.isArray(data.students)) {
+            throw new Error('Unexpected payload at ' + url);
+          }
+          return { data: data, url: url };
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw lastErr || new Error('Unable to fetch dashboard data');
+    }
+
+    function applyOverviewFilter() {
+      if (!dashboardData || !dashboardData.students) return;
+      var schoolVals = getSelectedDropdownValues('schoolDropdown');
+      syncMajorOptionsBySchool();
+      var yearVals = getSelectedDropdownValues('yearDropdown');
+      var majorVals = getSelectedDropdownValues('majorDropdown');
+      var filtered = dashboardData.students.filter(function(s) {
+        if (yearVals !== null) {
+          if (!yearVals.length || yearVals.indexOf(String(s.year_label).replace('Year ', '')) === -1) return false;
+        }
+        if (majorVals !== null) {
+          if (!majorVals.length || majorVals.indexOf(String(s.major)) === -1) return false;
+        }
+        if (schoolVals !== null) {
+          if (!schoolVals.length || schoolVals.indexOf(String(s.school)) === -1) return false;
+        }
+        return true;
+      });
+      var view = calcOverviewFromStudents(filtered);
+      updateOverviewUI(view);
+      updateOverviewFilterButtonLabels();
+    }
+
+    async function loadDashboardFromApi() {
+      setDataStatus('Loading live advising data from MySQL...', 'loading');
+      renderHighRiskTable([]);
+      renderPriorityRiskTable([]);
+      renderStudentManagementTable([]);
+      if (gpaDistChartObj) {
+        gpaDistChartObj.data.datasets[0].data = [0, 0, 0, 0, 0];
+        gpaDistChartObj.update();
+      }
+      if (gpaTrendChartObj) {
+        gpaTrendChartObj.data.labels = [];
+        gpaTrendChartObj.data.datasets[0].data = [];
+        gpaTrendChartObj.update();
+      }
+      if (progressBarChartObj) {
+        progressBarChartObj.data.datasets[0].data = [0, 0, 0];
+        progressBarChartObj.update();
+      }
+      try {
+        var payload = await fetchDashboardPayload();
+        dashboardData = payload.data;
+        setDataStatus('Live data loaded from ' + payload.url, 'ok');
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+        setDataStatus('Live data load failed. Still showing fallback content. Error: ' + (err && err.message ? err.message : err), 'error');
+        return;
+      }
+
+      var students = dashboardData.students || [];
+      buildProfileData(students);
+      renderHighRiskTable(students);
+      renderPriorityRiskTable(students);
+      renderStudentManagementTable(students);
+      updateRiskSummary(dashboardData.risk_summary || {}, students);
+      applyHighRiskThreshold();
+
+      var years = Array.from(new Set(students.map(function(s) { return String(s.year_label).replace('Year ', ''); }))).sort();
+      var majors = Array.from(new Set(students.map(function(s) { return s.major; }))).sort();
+      var schools = Array.from(new Set(students.map(function(s) { return s.school; }))).sort();
+      buildOverviewCheckboxes('yearDropdown', years, 'year', function(v) { return 'Year ' + v; });
+      buildOverviewCheckboxes('majorDropdown', majors, 'major', function(v) { return v; });
+      buildOverviewCheckboxes('schoolDropdown', schools, 'school', function(v) { return v; });
+      syncMajorOptionsBySchool();
+
+      updateOverviewUI(dashboardData.overview || {});
+      updateOverviewFilterButtonLabels();
+      filterStudentList();
+    }
 
     function switchProgressChart(type) {
       document.getElementById('progressBarView').style.display = type === 'bar' ? 'block' : 'none';
@@ -1722,10 +2168,10 @@
       progressPieChartObj = new Chart(document.getElementById('progressPieChart'), {
         type: 'doughnut',
         data: {
-          labels: ['Major Required (18cr)', 'Electives (17cr)', 'Univ. Core (16cr)', 'Free Elective (34cr)', 'Remaining (35cr)'],
+          labels: ['Major Required (18cr)', 'Electives (17cr)', 'Univ. Core (16cr)', 'Remaining (35cr)'],
           datasets: [{
-            data: [18, 17, 16, 34, 35],
-            backgroundColor: ['#1e3a8a', '#1d4ed8', '#3b82f6', '#93c5fd', '#e2e8f0'],
+            data: [18, 17, 16, 35],
+            backgroundColor: ['#1e3a8a', '#1d4ed8', '#3b82f6', '#e2e8f0'],
             borderWidth: 2, borderColor: '#ffffff'
           }]
         },
@@ -1740,7 +2186,7 @@
     }
 
     /* GPA Distribution Bar Chart */
-    new Chart(document.getElementById('gpaDistChart'), {
+    gpaDistChartObj = new Chart(document.getElementById('gpaDistChart'), {
       type: 'bar',
       data: {
         labels: ['<2.0', '2.0–2.5', '2.5–3.0', '3.0–3.5', '≥3.5'],
@@ -1758,31 +2204,35 @@
     });
 
     /* GPA Trend Line Chart */
-    new Chart(document.getElementById('gpaTrendChart'), {
+    gpaTrendChartObj = new Chart(document.getElementById('gpaTrendChart'), {
       type: 'line',
       data: {
         labels: ['2024 Spring', '2024 Fall', '2025 Spring', '2025 Fall'],
         datasets: [{
           label: 'Avg GPA', data: [3.21, 3.14, 3.07, 2.98],
           borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
-          tension: 0.35, pointRadius: 5, pointBackgroundColor: '#3b82f6', fill: true, borderWidth: 3
+          tension: 0.35, pointRadius: 6, pointHoverRadius: 7, pointBackgroundColor: '#3b82f6', fill: true, borderWidth: 3, clip: 16
         }]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        animation: { duration: 1000, easing: 'easeInOutCubic' },
-        plugins: { legend: { display: false } },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          animation: { duration: 1000, easing: 'easeInOutCubic' },
+          plugins: { legend: { display: false } },
+        layout: { padding: { top: 8, right: 6, left: 4, bottom: 18 } },
         scales: {
-          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
-          y: { grid: { color: '#f3f4f6' }, min: 2.6, max: 3.5,
-            ticks: { stepSize: 0.2, callback: function(v) { return v.toFixed(1); }, color: '#6b7280', font: { size: 11 } }
+          x: {
+            grid: { display: false },
+            ticks: { color: '#6b7280', font: { size: 11 }, autoSkip: false, maxRotation: 35, minRotation: 35, padding: 8 }
+          },
+          y: { grid: { color: '#f3f4f6' }, min: 2.4, max: 3.8,
+            ticks: { stepSize: 0.1, callback: function(v) { return v.toFixed(1); }, color: '#6b7280', font: { size: 11 } }
           }
         }
       }
     });
 
     /* Progress Bar Chart */
-    new Chart(document.getElementById('progressBarChart'), {
+    progressBarChartObj = new Chart(document.getElementById('progressBarChart'), {
       type: 'bar',
       data: {
         labels: ['Major Required (36cr)', 'Electives (24cr)', 'Univ. Core (20cr)'],
@@ -1809,6 +2259,7 @@
         }
       }
     });
+    loadDashboardFromApi();
   </script>
 </body>
 </html>

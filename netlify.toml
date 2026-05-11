@@ -1,9 +1,19 @@
 [build]
-  command = "npm run frontend:build"
+  command = "npm run frontend:build && cp aa_dashboard.html frontend/dist/aa_dashboard.html && cp student_interface.html frontend/dist/student_dashboard.html"
   publish = "frontend/dist"
 
 [build.environment]
   VITE_BASE_PATH = "/"
+
+[[redirects]]
+  from = "/aa_dashboard.html"
+  to = "/aa_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/student_dashboard.html"
+  to = "/student_dashboard.html"
+  status = 200
 
 [[redirects]]
   from = "/*"

@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import mysql.connector
 import json
 import os
+from datetime import date
+import re
 
 # ── Config ──────────────────────────────────────────────────────────
 DB_CONFIG = {
@@ -61,6 +63,41 @@ def safe_json(value):
     except (json.JSONDecodeError, TypeError):
         parts = [p.strip() for p in str(value).replace(";", "\n").splitlines() if p.strip()]
         return parts or [str(value)]
+
+def _student_display_name(row):
+    first = (row.get("first_name") or "").strip()
+    last = (row.get("last_name") or "").strip()
+    if first or last:
+        return f"{first} {last}".strip()
+    return (row.get("username") or row.get("student_id") or "Student").strip()
+
+def _to_year_label(year_enrolled):
+    if not year_enrolled:
+        return "Year 1"
+    current = date.today().year
+    year = current - int(year_enrolled)
+    if year < 1:
+        year = 1
+    if year > 4:
+        year = 4
+    return f"Year {year}"
+
+_SEM_RE = re.compile(r"^(\d{4})-(\d{2})\s+(Term\s+\d+|Summer)$")
+
+def _semester_sort_key(sem):
+    text = (sem or "").strip()
+    m = _SEM_RE.match(text)
+    if not m:
+        return (9999, 9, text)
+    year_start = int(m.group(1))
+    tail = m.group(3)
+    if tail == "Term 1":
+        phase = 1
+    elif tail == "Term 2":
+        phase = 2
+    else:
+        phase = 3
+    return (year_start, phase, text)
 
 # ── API routes (must be defined BEFORE static mount) ────────────────
 @app.get("/api/courses")
@@ -123,6 +160,309 @@ def get_course(course_code: str):
         **{k: (v or "") for k, v in row.items()},
         "dept":     SHEET_TO_DEPT.get(sheet, sheet),
         "outcomes": safe_json(row["outcome"]),
+    }
+
+@app.get("/api/advising/dashboard")
+def get_advising_dashboard():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                s.student_id,
+                s.username,
+                s.first_name,
+                s.last_name,
+                s.major,
+                s.year_enrolled,
+                s.gpa,
+                s.total_credits,
+                sc.school_name,
+                MAX(acl.contact_date) AS last_contact_date,
+                COUNT(acl.id) AS contacts_count
+            FROM students s
+            LEFT JOIN majors m
+                ON s.major = m.major_name
+            LEFT JOIN schools sc
+                ON m.school_id = sc.school_id
+            LEFT JOIN advisor_contact_log acl
+                ON acl.student_id = s.student_id
+            GROUP BY
+                s.student_id, s.username, s.first_name, s.last_name,
+                s.major, s.year_enrolled, s.gpa, s.total_credits, sc.school_name
+            ORDER BY s.student_id
+        """)
+        student_rows = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT id, student_id, semester, term_gpa
+            FROM gpa_history
+            ORDER BY id
+        """)
+        gpa_rows = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT student_id, contact_date, contact_type, notes
+            FROM advisor_contact_log
+            ORDER BY contact_date DESC, id DESC
+        """)
+        contact_rows = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT student_id, category, COUNT(*) AS course_count
+            FROM enrollment
+            WHERE status = 'Completed'
+            GROUP BY student_id, category
+        """)
+        enrollment_rows = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+
+    today = date.today()
+
+    gpa_by_student = {}
+    sem_buckets = {}
+    for r in gpa_rows:
+        sid = r["student_id"]
+        gpa_by_student.setdefault(sid, []).append({
+            "semester": (r.get("semester") or "").strip(),
+            "term_gpa": float(r["term_gpa"]) if r.get("term_gpa") is not None else None
+        })
+        sem = (r.get("semester") or "").strip()
+        if sem and r.get("term_gpa") is not None:
+            sem_buckets.setdefault(sem, []).append(float(r["term_gpa"]))
+
+    contact_by_student = {}
+    for r in contact_rows:
+        sid = r["student_id"]
+        contact_by_student.setdefault(sid, []).append({
+            "date": r["contact_date"].isoformat() if r.get("contact_date") else None,
+            "type": (r.get("contact_type") or "").strip(),
+            "notes": (r.get("notes") or "").strip(),
+        })
+
+    cat_by_student = {}
+    for r in enrollment_rows:
+        sid = r["student_id"]
+        cat = (r.get("category") or "Other").strip()
+        cnt = int(r.get("course_count") or 0)
+        cat_by_student.setdefault(sid, {})
+        cat_by_student[sid][cat] = cnt
+
+    students = []
+    gpa_distribution = {"lt2": 0, "2to25": 0, "25to3": 0, "3to35": 0, "ge35": 0}
+
+    total_completion_pct = 0.0
+    total_students = 0
+    communication_recent = 0
+    comm_no_contact = 0
+    comm_1_2 = 0
+    comm_3_plus = 0
+
+    major_courses = 0
+    core_courses = 0
+    elective_courses = 0
+
+    for row in student_rows:
+        sid = row["student_id"]
+        name = _student_display_name(row)
+        year_label = _to_year_label(row.get("year_enrolled"))
+        major = (row.get("major") or "Undeclared").strip()
+        school = (row.get("school_name") or "Unknown School").strip()
+        gpa = float(row["gpa"]) if row.get("gpa") is not None else 0.0
+        total_credits = int(row.get("total_credits") or 0)
+
+        completion_pct = max(0.0, min(100.0, (total_credits / 120.0) * 100.0))
+        total_completion_pct += completion_pct
+        total_students += 1
+
+        if gpa < 2.0:
+            gpa_distribution["lt2"] += 1
+        elif gpa < 2.5:
+            gpa_distribution["2to25"] += 1
+        elif gpa < 3.0:
+            gpa_distribution["25to3"] += 1
+        elif gpa < 3.5:
+            gpa_distribution["3to35"] += 1
+        else:
+            gpa_distribution["ge35"] += 1
+
+        last_contact = row.get("last_contact_date")
+        last_contact_iso = last_contact.isoformat() if last_contact else None
+        last_contact_days = (today - last_contact).days if last_contact else 999
+        if last_contact_days <= 90:
+            communication_recent += 1
+
+        contacts_count = int(row.get("contacts_count") or 0)
+        if contacts_count == 0:
+            comm_no_contact += 1
+        elif contacts_count <= 2:
+            comm_1_2 += 1
+        else:
+            comm_3_plus += 1
+
+        hist = gpa_by_student.get(sid, [])
+        gpa_decline = 0.0
+        if len(hist) >= 2:
+            latest = hist[-1].get("term_gpa")
+            prev = hist[-2].get("term_gpa")
+            if latest is not None and prev is not None and prev > latest:
+                gpa_decline = round(prev - latest, 3)
+
+        year_num = int(year_label.split(" ")[1])
+        expected_credits = year_num * 30
+        credit_delay = max(0, expected_credits - total_credits)
+        final_urgency = 100 if (year_num >= 4 and completion_pct < 85) else (50 if year_num >= 4 and completion_pct < 100 else 0)
+
+        gpa_signal = min(100.0, (gpa_decline / 0.5) * 100.0) if gpa_decline > 0 else 0.0
+        credit_signal = min(100.0, (credit_delay / 30.0) * 100.0) if credit_delay > 0 else 0.0
+        contact_signal = min(100.0, (last_contact_days / 120.0) * 100.0) if last_contact_days > 0 else 0.0
+        risk_score = round((0.40 * gpa_signal) + (0.30 * credit_signal) + (0.20 * contact_signal) + (0.10 * final_urgency))
+
+        if risk_score >= 85:
+            risk_level = "High"
+        elif risk_score >= 70:
+            risk_level = "Medium"
+        else:
+            risk_level = "Low"
+
+        tags = []
+        if gpa_decline >= 0.30:
+            tags.append("gpa")
+        if credit_delay > 0:
+            tags.append("credit")
+        if last_contact_days > 90:
+            tags.append("contact")
+        if final_urgency > 0:
+            tags.append("final")
+        if not tags:
+            tags.append("monitor")
+
+        reason_map = {
+            "gpa": "GPA drop",
+            "credit": "Credit delay",
+            "contact": "No recent contact",
+            "final": "Final-year urgency",
+            "monitor": "General monitoring"
+        }
+        reason_text = " + ".join(reason_map[t] for t in tags[:2])
+
+        by_cat = cat_by_student.get(sid, {})
+        major_cnt = int(by_cat.get("Major", 0))
+        core_cnt = int(by_cat.get("GenEd", 0))
+        elective_cnt = sum(v for k, v in by_cat.items() if k not in ("Major", "GenEd"))
+        major_courses += major_cnt
+        core_courses += core_cnt
+        elective_courses += elective_cnt
+
+        students.append({
+            "student_id": sid,
+            "name": name,
+            "year_label": year_label,
+            "major": major,
+            "school": school,
+            "gpa": round(gpa, 3),
+            "total_credits": total_credits,
+            "completion_pct": round(completion_pct, 1),
+            "last_contact_date": last_contact_iso,
+            "last_contact_days": int(last_contact_days),
+            "contacts_count": contacts_count,
+            "risk_score": int(risk_score),
+            "risk_level": risk_level,
+            "risk_tags": tags,
+            "reason_text": reason_text,
+            "gpa_decline": gpa_decline,
+            "credit_delay": int(credit_delay),
+            "history": contact_by_student.get(sid, []),
+            "gpa_terms": hist,
+            "notes": "",
+            "missing_courses": {"Major Required": [], "Electives": [], "University Core": []},
+            "category_progress": {
+                "major_courses": major_cnt,
+                "core_courses": core_cnt,
+                "elective_courses": elective_cnt
+            }
+        })
+
+    sem_items = []
+    for sem, vals in sem_buckets.items():
+        sem_items.append({
+            "semester": sem,
+            "avg_gpa": round(sum(vals) / len(vals), 3)
+        })
+    sem_items.sort(key=lambda x: _semester_sort_key(x["semester"]))
+
+    major_credits = major_courses * 3
+    core_credits = core_courses * 3
+    elective_credits = elective_courses * 3
+    total_done_credits = major_credits + core_credits + elective_credits
+    total_expected_credits = max(120 * len(students), total_done_credits)
+    remaining_credits = max(0, total_expected_credits - total_done_credits)
+
+    major_target = max(1, round(total_expected_credits * 0.30))
+    elective_target = max(1, round(total_expected_credits * 0.20))
+    core_target = max(1, round(total_expected_credits * 0.17))
+
+    major_pct = round(min(100, (major_credits / major_target) * 100), 1)
+    elective_pct = round(min(100, (elective_credits / elective_target) * 100), 1)
+    core_pct = round(min(100, (core_credits / core_target) * 100), 1)
+
+    avg_completion = round((total_completion_pct / total_students), 1) if total_students else 0.0
+    avg_credits_done = round(sum(s["total_credits"] for s in students) / total_students, 1) if total_students else 0.0
+
+    students.sort(key=lambda x: (-x["risk_score"], x["name"]))
+    high_risk_count = len([s for s in students if s["risk_score"] >= 85])
+
+    return {
+        "generated_at": date.today().isoformat(),
+        "students": students,
+        "overview": {
+            "gpa_distribution": {
+                "labels": ["<2.0", "2.0-2.5", "2.5-3.0", "3.0-3.5", ">=3.5"],
+                "values": [
+                    gpa_distribution["lt2"],
+                    gpa_distribution["2to25"],
+                    gpa_distribution["25to3"],
+                    gpa_distribution["3to35"],
+                    gpa_distribution["ge35"],
+                ]
+            },
+            "gpa_trend": {
+                "labels": [s["semester"] for s in sem_items],
+                "values": [s["avg_gpa"] for s in sem_items]
+            },
+            "progress": {
+                "avg_completion_pct": avg_completion,
+                "avg_credits_done": avg_credits_done,
+                "avg_credits_total": 120,
+                "major": {"done": major_credits, "target": major_target, "pct": major_pct},
+                "elective": {"done": elective_credits, "target": elective_target, "pct": elective_pct},
+                "core": {"done": core_credits, "target": core_target, "pct": core_pct},
+                "pie": {
+                    "major": major_credits,
+                    "elective": elective_credits,
+                    "core": core_credits,
+                    "remaining": remaining_credits
+                }
+            },
+            "communication": {
+                "total_students": len(students),
+                "recently_contacted": communication_recent,
+                "no_contact": comm_no_contact,
+                "contacts_1_2": comm_1_2,
+                "contacts_3_plus": comm_3_plus
+            }
+        },
+        "risk_summary": {
+            "high_risk_count": high_risk_count,
+            "credit_alert_count": len([s for s in students if "credit" in s["risk_tags"]]),
+            "gpa_drop_count": len([s for s in students if "gpa" in s["risk_tags"]]),
+            "no_contact_count": len([s for s in students if "contact" in s["risk_tags"]]),
+        }
     }
 
 
