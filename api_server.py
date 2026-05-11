@@ -490,6 +490,14 @@ def root():
 def serve_index():
     return FileResponse(os.path.join(BASE_DIR, "index.html"), headers=NO_CACHE)
 
+@app.get("/student_dashboard.html")
+def serve_student_dashboard_legacy():
+    return FileResponse(os.path.join(BASE_DIR, "students-interface", "student_dashboard_index.html"), headers=NO_CACHE)
+
+@app.get("/student_dashboard_guide.html")
+def serve_student_guide_legacy():
+    return FileResponse(os.path.join(BASE_DIR, "students-interface", "student_dashboard_guide.html"), headers=NO_CACHE)
+
 @app.get("/student_interface.html")
 def serve_student():
     return FileResponse(os.path.join(BASE_DIR, "student_interface.html"), headers=NO_CACHE)
