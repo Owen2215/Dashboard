@@ -40,11 +40,10 @@ html, body, #root { margin: 0; height: 100%; }
 }
 
 .login-logo {
-  width: 40px;
-  height: 40px;
+  width: 112px;
+  height: auto;
   object-fit: contain;
   flex-shrink: 0;
-  border-radius: 10px;
 }
 
 .eyebrow {

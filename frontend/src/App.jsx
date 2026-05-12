@@ -1,6 +1,7 @@
 import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
 import { useMemo, useState, useRef } from 'react';
-import { User, Mail, LogIn, LayoutDashboard } from 'lucide-react';
+import { User, Mail, LogIn } from 'lucide-react';
+import loginLogo from '../../assets/Image_20260513001106_704_33.png';
 
 // ── TEST MODE: Set to true to bypass credential validation ──
 const SKIP_CREDENTIALS = true;
@@ -91,16 +92,10 @@ export default function App() {
       <section className="login-shell">
         <div className="login-card">
           <div className="login-brand">
-            <div
-              className="login-logo"
-              aria-hidden="true"
-              style={{ display: 'grid', placeItems: 'center', background: '#003087', color: '#ffffff' }}
-            >
-              <LayoutDashboard size={24} strokeWidth={2.2} />
-            </div>
+            <img className="login-logo" src={loginLogo} alt="Student Study Progress Dashboard logo" />
             <div>
               <p className="eyebrow">Chinese University of Hong Kong, Shenzhen</p>
-              <h1> Transcript to Insight </h1>
+              <h1>Student Study Progress Dashboard</h1>
               <p className="subtitle">
                 See your skills, track your progress, own your learning.
               </p>

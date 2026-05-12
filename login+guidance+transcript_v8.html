@@ -375,11 +375,11 @@
     /* ── Brand Header ── */
     .auth-brand{ display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
     .auth-logo{
-      flex-shrink:0; width:46px; height:46px; border-radius:12px;
-      background:var(--gradient-auth);
-      display:grid; place-items:center;
-      color:#fff; font-size:22px; font-weight:800;
-      box-shadow:0 6px 16px rgba(123,31,162,.35);
+      flex-shrink:0;
+      width:128px;
+      height:auto;
+      display:block;
+      object-fit:contain;
     }
     .auth-eyebrow{
       font-size:11px; font-weight:700; letter-spacing:.14em;
@@ -556,6 +556,7 @@
 
     @media (max-width:520px){
       .auth-card{ padding:32px 24px 26px; border-radius:20px; }
+      .auth-logo{ width:108px; }
       .auth-title{ font-size:1.25rem; }
       .privacy-bar-global{ font-size:11.5px; padding:9px 14px; }
       .privacy-bar-global .privacy-info{ display:none; }
@@ -1022,10 +1023,10 @@
 
   <div class="auth-card">
     <div class="auth-brand">
-      <div class="auth-logo" aria-hidden="true">⧈</div>
+      <img class="auth-logo" src="assets/Image_20260513001106_704_33.png" alt="Student Study Progress Dashboard logo" />
       <div>
         <div class="auth-eyebrow">CUHK-Shenzhen · Academic Capability Lab</div>
-        <h1 class="auth-title" id="auth-title">Turn Your Transcript Into Insight</h1>
+        <h1 class="auth-title" id="auth-title">Student Study Progress Dashboard</h1>
         <p class="auth-subtitle">A privacy-first competency mapping tool, powered by the Outcome-Driven Skill Contribution Model.</p>
       </div>
     </div>
