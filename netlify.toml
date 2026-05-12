@@ -31,6 +31,12 @@ status = 200
   status = 200
 
 [[redirects]]
+  from = "/api/*"
+  to = "https://<your-render-service>.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

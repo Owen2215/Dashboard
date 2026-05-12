@@ -330,7 +330,7 @@ table.matrix tr:hover td{background:#f8f9ff}
         <h2 data-i18n="card.portfolio">🎒 My Course Portfolio</h2>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn" onclick="document.getElementById('transcript-file').click()">📥 Import Transcript</button>
-          <input type="file" id="transcript-file" style="display:none" accept=".xlsx,.xls,.csv" onchange="importTranscript(event)"/>
+          <input type="file" id="transcript-file" style="display:none" accept=".pdf,.xlsx,.xls,.csv" onchange="importTranscript(event)"/>
           <button class="btn" onclick="exportPortfolio()">📤 Export Excel</button>
           <button class="btn" onclick="clearBasket()">Clear</button>
         </div>
@@ -1049,9 +1049,328 @@ function fillMajorDeptSelect(){
 }
 
 // ── Transcript import / export ──
+let __pdfjsLibPromise = null;
+
+async function loadPdfJs(){
+  if (window.pdfjsLib) return window.pdfjsLib;
+  if (!__pdfjsLibPromise){
+    __pdfjsLibPromise = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs')
+      .then(mod => {
+        mod.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+        window.pdfjsLib = mod;
+        return mod;
+      });
+  }
+  return __pdfjsLibPromise;
+}
+
+function transcriptTermToSem(termLabel){
+  const m = String(termLabel || '').match(/^(\d{4})-(\d{2})\s+(Term\s*1|Term\s*2|Summer)$/i);
+  if (!m) return 'F24';
+  const y1 = String(parseInt(m[1], 10) % 100).padStart(2, '0');
+  const y2 = String(parseInt(m[2], 10)).padStart(2, '0');
+  const t = m[3].toLowerCase();
+  if (t.indexOf('term 1') !== -1) return 'F' + y1;
+  return 'S' + y2;
+}
+
+async function extractPdfTranscriptText(file){
+  const pdfjs = await loadPdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const pages = Math.min(pdf.numPages, 20);
+  let fullText = '';
+  for (let p = 1; p <= pages; p++){
+    const page = await pdf.getPage(p);
+    const textContent = await page.getTextContent();
+    const rows = {};
+    textContent.items.forEach(it => {
+      const y = Math.round((it.transform && it.transform[5]) || 0);
+      if (!rows[y]) rows[y] = [];
+      rows[y].push({
+        x: (it.transform && it.transform[4]) || 0,
+        str: String(it.str || ''),
+        eol: !!it.hasEOL
+      });
+    });
+    Object.keys(rows)
+      .map(Number)
+      .sort((a, b) => b - a)
+      .forEach(y => {
+        const line = rows[y]
+          .sort((a, b) => a.x - b.x)
+          .map(c => c.str + (c.eol ? '\n' : ' '))
+          .join('')
+          .replace(/[ \t]+/g, ' ')
+          .trim();
+        if (line) fullText += line + '\n';
+      });
+    fullText += '\n';
+  }
+  return fullText;
+}
+
+function parseCuhkTranscriptText(text){
+  const out = {
+    studentName: null,
+    studentId: null,
+    major: null,
+    stream: null,
+    college: null,
+    school: null,
+    admittedIn: null,
+    modeOfStudy: null,
+    termSummaries: {},
+    summary: { totalUnitsPassed: null, cumulativeGPA: null, majorGPA: null },
+    courses: []
+  };
+  if (!text) return out;
+
+  const cleaned = String(text).replace(/[\u00A0\u2007\u202F]/g, ' ').replace(/\r/g, '');
+  const colSplit = cleaned.replace(/[ \t]{2,}/g, '\n');
+  const lines = colSplit.split('\n').map(l => l.replace(/[ \t]+/g, ' ').trim()).filter(Boolean);
+  const flat = lines.join('\n');
+
+  function pluck(label){
+    let m = flat.match(new RegExp('(?:^|\\n)\\s*' + label + '\\s*[:\\-]\\s*([^\\n]+)', 'i'));
+    if (m) return m[1].trim();
+    m = flat.match(new RegExp('(?:^|\\n)\\s*' + label + '\\s*[:\\-]?\\s*\\n\\s*([^\\n]+)', 'i'));
+    return m ? m[1].trim() : null;
+  }
+
+  const nameMatch = flat.match(/(?:^|\n)Name\s*:\s*([^\n]+?)(?:\n|Chinese Name|Student ID|ID\/Passport|$)/i);
+  if (nameMatch) out.studentName = nameMatch[1].trim().replace(/\s+/g, ' ');
+  const idMatch = flat.match(/Student\s*ID\s*No\.?\s*[:\-]?\s*(\d{8,12})/i) || flat.match(/(?:^|\s)(1\d{8})(?:\s|$)/m);
+  if (idMatch) out.studentId = idMatch[1];
+  out.major = pluck('Major\\s*\\/\\s*Programme') || pluck('Major') || null;
+  out.stream = pluck('Stream\\(s\\)') || pluck('Stream') || null;
+  out.college = pluck('College') || null;
+  out.school = pluck('School') || null;
+  out.admittedIn = pluck('Admitted in') || null;
+  out.modeOfStudy = pluck('Mode of Study') || null;
+
+  const termHeader = /^(\d{4})\s*[\-–—−]\s*(\d{2,4})\s+Term\s*([12])\s*$/i;
+  const gradeAlt = '(?:A-|A|B\\+|B-|B|C\\+|C-|C|D\\+|D|F|PA|P|DI|FA|U|W|IP|NR|I)';
+  const courseRow = new RegExp(
+    '^([A-Z]{2,4}\\d{3,4}[A-Z]?)\\s+([A-Za-z][A-Za-z &,\\-\'\\(\\):\\/]+?)\\s+(\\d+\\.\\d)\\s+(' + gradeAlt + ')(?:\\s+(N\\/A|\\d+\\.\\d+))?\\s*$'
+  );
+  const courseRowLoose = new RegExp('^([A-Z]{2,4}\\d{3,4}[A-Z]?)\\s+(.+?)\\s+(\\d+\\.\\d)\\s+(' + gradeAlt + ')\\b');
+  const codeTitleOnlyRow = /^([A-Z]{2,4}\d{3,4}[A-Z]?)\s+([A-Za-z].+)$/;
+  const creditGradeRow = new RegExp('^(\\d+\\.\\d)\\s+(' + gradeAlt + ')(?:\\s+(N\\/A|\\d+\\.\\d+))?\\s*$', 'i');
+
+  const seen = new Set();
+  let currentTerm = '';
+  for (let i = 0; i < lines.length; i++){
+    const line = lines[i];
+    const th = line.match(termHeader);
+    if (th){
+      const y1 = th[1];
+      const y2 = th[2].length === 2 ? (th[1].slice(0, 2) + th[2]) : th[2];
+      currentTerm = y1 + '-' + y2.slice(-2) + ' Term ' + th[3];
+      continue;
+    }
+
+    if (currentTerm){
+      const slot = out.termSummaries[currentTerm] || (out.termSummaries[currentTerm] = {});
+      let m = line.match(/Units?\s*Passed\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i);
+      if (m && slot.unitsPassed == null) slot.unitsPassed = Number(m[1]);
+      m = line.match(/Cumulative\s*Units?\s*Passed\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i);
+      if (m && slot.cumulativeUnits == null) slot.cumulativeUnits = Number(m[1]);
+      m = line.match(/Term\s*G\.?\s*P\.?\s*A\.?\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i);
+      if (m && slot.termGPA == null) slot.termGPA = Number(m[1]);
+      m = line.match(/Cumulative\s*G\.?\s*P\.?\s*A\.?\s*[:=\-]?\s*(\d+(?:\.\d+)?)/i);
+      if (m && slot.cumulativeGPA == null) slot.cumulativeGPA = Number(m[1]);
+    }
+
+    let cm = line.match(courseRow);
+    let code = null, title = null, credit = null, grade = null, advanceTo = i;
+    if (cm){
+      code = cm[1]; title = cm[2]; credit = Number(cm[3]); grade = cm[4].toUpperCase();
+    } else if ((cm = line.match(courseRowLoose))){
+      code = cm[1]; title = cm[2].replace(/\s+\d[\d\.\s]*$/, '').trim(); credit = Number(cm[3]); grade = cm[4].toUpperCase();
+    } else {
+      let ct = line.match(codeTitleOnlyRow);
+      if (ct){
+        const titleParts = [ct[2].trim()];
+        let foundCredit = null, foundGrade = null;
+        let j = i + 1;
+        while (j < lines.length && (j - i) <= 6){
+          const lj = lines[j];
+          if (/^[A-Z]{2,4}\d{3,4}[A-Z]?$/.test(lj) || termHeader.test(lj)) break;
+          if (/Term\s*GPA|Cumulative\s*GPA|Units?\s*Passed|Summary|Honour|Award/i.test(lj)) break;
+          let cg = lj.match(creditGradeRow);
+          if (cg && foundCredit == null){
+            foundCredit = Number(cg[1]);
+            foundGrade = String(cg[2] || '').toUpperCase();
+            j++;
+            break;
+          }
+          if (/^N\/?A$|^\d+\.\d+$/i.test(lj)) {}
+          else if (/^[A-Za-z][A-Za-z &,\-'():\/]+$/.test(lj) && foundCredit == null) titleParts.push(lj);
+          j++;
+        }
+        if (foundCredit != null && foundGrade){
+          code = ct[1];
+          title = titleParts.join(' ');
+          credit = foundCredit;
+          grade = foundGrade;
+          advanceTo = j - 1;
+        } else {
+          continue;
+        }
+      } else {
+      const codeOnly = line.match(/^([A-Z]{2,4}\d{3,4}[A-Z]?)$/);
+      if (!codeOnly) continue;
+      const titleParts = [];
+      const gradeRe = new RegExp('^' + gradeAlt + '$', 'i');
+      let foundCredit = null, foundGrade = null;
+      let j = i + 1;
+      while (j < lines.length && (j - i) <= 6){
+        const lj = lines[j];
+        if (/^[A-Z]{2,4}\d{3,4}[A-Z]?$/.test(lj) || termHeader.test(lj)) break;
+        if (/Term\s*GPA|Cumulative\s*GPA|Units?\s*Passed|Summary|Honour|Award/i.test(lj)) break;
+        if (/^\d+\.\d$/.test(lj) && foundCredit == null) foundCredit = Number(lj);
+        else if (gradeRe.test(lj) && foundGrade == null) foundGrade = lj.toUpperCase();
+        else if (/^N\/?A$|^\d+\.\d+$/i.test(lj)) {}
+        else if (/^[A-Za-z][A-Za-z &,\-'():\/]+$/.test(lj) && foundCredit == null) titleParts.push(lj);
+        j++;
+        if (foundCredit != null && foundGrade != null) break;
+      }
+      if (foundCredit == null || foundGrade == null || !titleParts.length) continue;
+      code = codeOnly[1];
+      title = titleParts.join(' ');
+      credit = foundCredit;
+      grade = foundGrade;
+      advanceTo = j - 1;
+      }
+    }
+
+    const courseCode = String(code || '').toUpperCase().replace(/^([A-Z]+)(\d)/, '$1 $2').replace(/\s+/g, ' ').trim();
+    if (!courseCode) continue;
+    const key = (currentTerm || '-') + '|' + courseCode + '|' + grade;
+    if (seen.has(key)){ i = advanceTo; continue; }
+    seen.add(key);
+    out.courses.push({
+      courseCode,
+      courseName: String(title || courseCode).replace(/\s+/g, ' ').trim(),
+      credit: Number(credit || 0),
+      letterGrade: String(grade || '').toUpperCase(),
+      term: currentTerm || '',
+      confidence: 0.95
+    });
+    i = advanceTo;
+  }
+
+  const summaryBlock = (() => {
+    const m = flat.match(/\bSummary\b(?![\s\S]*\bSummary\b)/i);
+    return m ? flat.slice(m.index) : flat.slice(-1500);
+  })();
+  let m = summaryBlock.match(/Total\s*Units?\s*Passed\s*[:\-]?\s*(\d+(?:\.\d+)?)/i);
+  if (m) out.summary.totalUnitsPassed = Number(m[1]);
+  m = summaryBlock.match(/(?:Cumulative|mulative)\s*G\.?\s*P\.?\s*A\.?\s*[:\-]?\s*(\d+(?:\.\d+)?)(?:\s*\/\s*4(?:\.0+)?)?/i);
+  if (m) out.summary.cumulativeGPA = Number(m[1]);
+  m = summaryBlock.match(/Major\s*G\.?\s*P\.?\s*A\.?\s*[:\-]?\s*(\d+(?:\.\d+)?)(?:\s*\/\s*4(?:\.0+)?)?/i);
+  if (m) out.summary.majorGPA = Number(m[1]);
+  if (out.summary.cumulativeGPA == null || out.summary.majorGPA == null){
+    const tableRow = summaryBlock.match(/CUHK\(SZ\)\s+\d+(?:\.\d+)?\s+(\d+(?:\.\d+)?)\/4(?:\.0+)?\s+(\d+(?:\.\d+)?)\/4(?:\.0+)?/i);
+    if (tableRow){
+      if (out.summary.cumulativeGPA == null) out.summary.cumulativeGPA = Number(tableRow[1]);
+      if (out.summary.majorGPA == null) out.summary.majorGPA = Number(tableRow[2]);
+    }
+  }
+  if (out.summary.totalUnitsPassed == null){
+    const lastCum = flat.match(/Cumulative\s*Units?\s*Passed\s*[:=\-]?\s*(\d+(?:\.\d+)?)(?![\s\S]*Cumulative\s*Units?\s*Passed)/i);
+    if (lastCum) out.summary.totalUnitsPassed = Number(lastCum[1]);
+  }
+
+  return out;
+}
+
+async function importTranscriptFromPdf(file){
+  const text = await extractPdfTranscriptText(file);
+  const parsed = parseCuhkTranscriptText(text);
+  let parsedRows = (parsed.courses || []).map(c => ({
+    semester: transcriptTermToSem(c.term),
+    transcriptTerm: c.term || '',
+    code: String(c.courseCode || '').toUpperCase().replace(/\s+/g, ' ').replace(/^([A-Z]+)(\d)/, '$1 $2'),
+    title: c.courseName || '',
+    grade: String(c.letterGrade || '').toUpperCase(),
+    credit: Number(c.credit || 0)
+  }));
+  if (!parsedRows.length){
+    // last fallback: at least import detected course codes
+    const codeHits = Array.from(new Set((String(text).match(/\b[A-Z]{2,4}\s?\d{4}[A-Z]?\b/g) || [])
+      .map(c => c.toUpperCase().replace(/\s+/g, ' ').replace(/^([A-Z]+)(\d)/, '$1 $2'))));
+    parsedRows = codeHits.map(c => ({ semester: 'F24', transcriptTerm: '', code: c, title: c, grade: '' }));
+  }
+  if (!parsedRows.length){
+    throw new Error('No transcript course rows were detected in the PDF.');
+  }
+
+  let added = 0, gradesAdded = 0, matched = 0;
+  parsedRows.forEach(r => {
+    const found = DATA.courses.find(c => c.code === r.code);
+    if (found){
+      matched++;
+      if (!selectedCodes.has(found.code)){
+        selectedCodes.add(found.code);
+        added++;
+      }
+      if ((GRADE_VAL[r.grade] != null) && !gpaRecords.some(g => g.sem === r.semester && g.code === found.code && g.grade === r.grade)){
+        gpaRecords.push({ sem: r.semester, code: found.code, grade: r.grade });
+        gradesAdded++;
+      }
+    }
+  });
+
+  // Sync major selector from transcript when we can infer a known department code.
+  const majorHint = String(parsed.major || parsed.stream || '').toUpperCase();
+  const inferredDept = ALL_DEPTS.find(d => {
+    if (!d || d === 'GE' || d === 'PED') return false;
+    const dep = DATA.departments[d] || {};
+    const depName = String(dep.name_en || dep.name || '').toUpperCase();
+    return majorHint.includes(d) || (depName && majorHint.includes(depName));
+  });
+  if (inferredDept && DATA.departments[inferredDept]){
+    majorDept = inferredDept;
+  }
+
+  const totalUnits =
+    parsed.summary.totalUnitsPassed != null
+      ? parsed.summary.totalUnitsPassed
+      : parsedRows.reduce((s, r) => s + (Number(r.credit) || 0), 0);
+  const latestGpa = parsed.summary.cumulativeGPA != null
+    ? parsed.summary.cumulativeGPA
+    : (() => {
+      const vals = Object.values(parsed.termSummaries || {})
+        .map(v => Number(v && v.cumulativeGPA))
+        .filter(v => Number.isFinite(v));
+      return vals.length ? vals[vals.length - 1] : null;
+    })();
+
+  alert(
+    `PDF parsed ${parsedRows.length} rows · matched ${matched} catalog courses · imported ${added} courses` +
+    (gradesAdded ? `, ${gradesAdded} grades` : '') +
+    (totalUnits ? ` · units ${totalUnits}` : '') +
+    (latestGpa != null ? ` · cumulative GPA ${latestGpa.toFixed(3)}` : '') +
+    (parsed.studentName ? `\nStudent: ${parsed.studentName}` : '') +
+    (parsed.studentId ? ` (${parsed.studentId})` : '') +
+    '.'
+  );
+}
+
 function importTranscript(ev){
   const file = ev.target.files[0];
   if (!file) return;
+  const lowerName = String(file.name || '').toLowerCase();
+  if (lowerName.endsWith('.pdf')){
+    importTranscriptFromPdf(file)
+      .then(() => { renderAll(); saveState(); })
+      .catch(err => { alert('Failed to parse PDF transcript: ' + err.message); })
+      .finally(() => { ev.target.value = ''; });
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = e => {
     try {
@@ -1129,6 +1448,22 @@ function gpaToIdx(gpa){
   });
   return best;
 }
+function semSortValue(sem, fallback){
+  const s = String(sem || '').trim().toUpperCase();
+  let m = s.match(/^([FS])\s*(\d{2})$/);
+  if (m){
+    const yy = parseInt(m[2], 10);
+    const term = m[1] === 'F' ? 0 : 1;
+    return 2000 + yy * 2 + term;
+  }
+  m = s.match(/^(\d{4})-(\d{2})\s*TERM\s*([12])$/i);
+  if (m){
+    const y = parseInt(m[1], 10);
+    const term = String(m[3]) === '1' ? 0 : 1;
+    return y * 2 + term;
+  }
+  return 100000 + (fallback || 0);
+}
 
 function addGrade(){
   const sem = document.getElementById('g-sem').value;
@@ -1180,15 +1515,26 @@ function renderGPAChart(){
     document.getElementById('gpa-stats').textContent = 'CGPA: — · Latest sem: —';
     return;
   }
-  // Group by semester (chronological)
-  const semOrder = ['F23','S24','F24','S25','F25','S26','F26','S27','F27','S28'];
-  const byCourse = gpaRecords.slice().sort((a,b) => semOrder.indexOf(a.sem) - semOrder.indexOf(b.sem));
+  // Group by semester (dynamic chronological ordering from actual records)
   const semGroups = {};
-  byCourse.forEach(g => { (semGroups[g.sem] = semGroups[g.sem]||[]).push(g); });
-  const sems = semOrder.filter(s => semGroups[s]);
+  const semFirstSeen = {};
+  gpaRecords.forEach((g, i) => {
+    const sem = String(g.sem || '').trim().toUpperCase();
+    if (!(sem in semFirstSeen)) semFirstSeen[sem] = i;
+    (semGroups[sem] = semGroups[sem] || []).push({...g, sem});
+  });
+  const sems = Object.keys(semGroups).sort((a, b) => semSortValue(a, semFirstSeen[a]) - semSortValue(b, semFirstSeen[b]));
+  const semIdx = {};
+  sems.forEach((s, i) => { semIdx[s] = i; });
+  const byCourse = gpaRecords
+    .map((g, i) => ({...g, sem: String(g.sem || '').trim().toUpperCase(), __i: i}))
+    .sort((a, b) => {
+      const d = semSortValue(a.sem, a.__i) - semSortValue(b.sem, b.__i);
+      return d || (a.__i - b.__i);
+    });
 
   // Each course = a point
-  const coursePoints = byCourse.map(g => ({x:sems.indexOf(g.sem), y:GRADE_ORDER.indexOf(g.grade), label:`${g.code}: ${g.grade}`}));
+  const coursePoints = byCourse.map(g => ({x:semIdx[g.sem], y:GRADE_ORDER.indexOf(g.grade), label:`${g.code}: ${g.grade}`}));
   // Semester GPA = average of grade points (4.0 scale) → map back to letter index proximately
   const semGPA = sems.map((s,i) => {
     const arr = semGroups[s];
@@ -1223,7 +1569,7 @@ function renderGPAChart(){
       responsive:true, maintainAspectRatio:false,
       scales:{
         x:{type:'linear', min:-0.3, max:sems.length-0.7,
-           ticks:{callback:(v)=>sems[v]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},
+           ticks:{callback:(v)=>sems[Math.round(v)]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},
            title:{display:true,text:'Semester',font:{size:12,weight:'600'},color:'#5a6076',padding:{top:6}}},
         y:{min:-0.5, max:GRADE_ORDER.length-0.5,
            ticks:{callback:(v)=>GRADE_ORDER[v]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},

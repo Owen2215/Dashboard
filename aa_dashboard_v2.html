@@ -8,17 +8,21 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { background: #f4f6f9; color: #1f2937; }
     .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 240px; background: #0f2747; color: white; padding: 24px 18px; position: fixed; left: 0; top: 0; bottom: 0; }
-    .logo { font-size: 20px; font-weight: 700; margin-bottom: 36px; }
+    .sidebar { width: 240px; background: #0f2747; color: white; padding: 24px 18px; position: fixed; left: 0; top: 0; bottom: 0; transition: width .2s ease; overflow: hidden; }
+    .logo-row { display:flex; align-items:center; justify-content:space-between; margin-bottom: 36px; }
+    .logo { font-size: 20px; font-weight: 700; white-space: nowrap; }
+    .icon-btn { width:34px; height:34px; border:1px solid #d1d5db; background:#fff; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+    .icon-btn.dark { background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+    .icon-btn svg { width:16px; height:16px; }
     .nav-item { padding: 13px 14px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; color: #dbeafe; }
     .nav-item:hover, .nav-item.active { background: #1d4ed8; color: white; }
-    .main { margin-left: 240px; width: calc(100% - 240px); padding: 24px 32px; }
+    .main { margin-left: 240px; width: calc(100% - 240px); padding: 24px 32px; transition: margin-left .2s ease, width .2s ease; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .header-actions { display: flex; align-items: center; gap: 10px; }
-    .search { width: 360px; padding: 11px 14px; border: 1px solid #d1d5db; border-radius: 10px; background: #f9fafb; color: #6b7280; }
-    .profile { font-weight: 600; color: #0f2747; }
-    .logout-btn { border: 1px solid #d1d5db; background: white; color: #1f2937; padding: 8px 12px; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600; }
-    .logout-btn:hover { background: #f3f4f6; }
+    .header-actions { display:flex; gap:10px; }
+    .app.sidebar-collapsed .sidebar { width:72px; padding:20px 10px; }
+    .app.sidebar-collapsed .logo { display:none; }
+    .app.sidebar-collapsed .main { margin-left:72px; width:calc(100% - 72px); }
+    .app.sidebar-collapsed .nav-item { text-align:center; padding:12px 8px; font-size:11px; }
     .page { display: none; }
     .page.active { display: block; }
     h1 { font-size: 28px; margin-bottom: 8px; }
@@ -75,7 +79,12 @@
 <body>
   <div class="app">
     <aside class="sidebar">
-      <div class="logo">CUHKSZ AA Dashboard</div>
+      <div class="logo-row">
+        <div class="logo">CUHKSZ AA Dashboard</div>
+        <button class="icon-btn dark" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
       <div class="nav-item active" onclick="showPage('overview', this)">Overview</div>
       <div class="nav-item" onclick="showPage('risk', this)">Risk Snapshot</div>
       <div class="nav-item" onclick="showPage('student', this)">Student Management</div>
@@ -85,7 +94,9 @@
       <div class="header">
         <div></div>
         <div class="header-actions">
-          <button class="logout-btn" onclick="logout()">Log out</button>
+          <button class="icon-btn" onclick="logout()" aria-label="Log out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          </button>
         </div>
       </div>
 
@@ -136,26 +147,26 @@
               <div style="text-align:right;">
                 <div style="font-size:11px; color:#9ca3af; margin-bottom:2px;">Avg Completion Rate</div>
                 <div style="display:flex; align-items:baseline; gap:8px; justify-content:flex-end;">
-                  <span id="hdrAvgPct" style="font-size:32px; font-weight:800; color:#1d4ed8; line-height:1;">—</span>
-                  <span id="hdrAvgCr" style="font-size:12px; color:#6b7280;">— / 120 cr</span>
+                  <span style="font-size:32px; font-weight:800; color:#1d4ed8; line-height:1;">71%</span>
+                  <span style="font-size:12px; color:#6b7280;">85 / 120 cr</span>
                 </div>
                 <div style="width:140px; margin-top:5px;">
-                  <div class="progress-line" style="height:7px; margin:0;"><div id="hdrAvgBar" class="progress-fill" style="width:0%; background:linear-gradient(90deg,#1d4ed8,#60a5fa);"></div></div>
+                  <div class="progress-line" style="height:7px; margin:0;"><div class="progress-fill" style="width:71%; background:linear-gradient(90deg,#1d4ed8,#60a5fa);"></div></div>
                 </div>
               </div>
             </div>
 
-            <!-- Completion Breakdown by Major/Year (inside Progress Overview) -->
+            <!-- Student Distribution by Completion Rate (inside Progress Overview) -->
             <div style="padding:14px 20px; border-bottom:1px solid #f0f4ff;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <div style="font-size:12px; font-weight:700; color:#1e3a8a;">Completion Breakdown by Category</div>
+                <div style="font-size:12px; font-weight:700; color:#1e3a8a;">Student Distribution by Completion Rate</div>
                 <div style="display:flex; gap:5px;">
                   <button id="bubbleByMajor" class="btn" style="padding:3px 9px; font-size:11px;" onclick="drawBubble('major')">By Major</button>
                   <button id="bubbleByYear"  class="btn secondary" style="padding:3px 9px; font-size:11px;" onclick="drawBubble('year')">By Year</button>
                 </div>
               </div>
               <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">
-                <span style="font-weight:600; color:#374151;">Y-axis: No. of students</span> &nbsp;·&nbsp; 4 bars per group: Major Req / Major Elective / Free Elective / Core
+                <span style="font-weight:600; color:#374151;">Y-axis: No. of students</span> &nbsp;·&nbsp; Bar colour = overall credit completion range
               </div>
               <canvas id="bubbleChart" height="170" style="width:100%; display:block;"></canvas>
             </div>
@@ -169,34 +180,34 @@
               <div style="display:grid; grid-template-columns:130px 1fr 80px; gap:8px; align-items:center; margin:7px 0;">
                 <span style="font-size:12px; color:#374151; font-weight:500;">Major Required</span>
                 <div style="position:relative; height:15px; background:#e5e7eb; border-radius:8px; overflow:hidden;">
-                  <div id="catBar-major" style="position:absolute;left:0;top:0;height:100%;width:50%;background:#1e3a8a;border-radius:8px;"></div>
-                  <span id="catPct-major" style="position:absolute;left:25%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">50%</span>
+                  <div style="position:absolute;left:0;top:0;height:100%;width:50%;background:#1e3a8a;border-radius:8px;"></div>
+                  <span style="position:absolute;left:25%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">50%</span>
                 </div>
-                <span id="catCr-major" style="font-size:11px;color:#6b7280;text-align:right;">18 / 36 cr</span>
+                <span style="font-size:11px;color:#6b7280;text-align:right;">18 / 36 cr</span>
               </div>
               <div style="display:grid; grid-template-columns:130px 1fr 80px; gap:8px; align-items:center; margin:7px 0;">
                 <span style="font-size:12px; color:#374151; font-weight:500;">Major Electives</span>
                 <div style="position:relative; height:15px; background:#e5e7eb; border-radius:8px; overflow:hidden;">
-                  <div id="catBar-elective" style="position:absolute;left:0;top:0;height:100%;width:72%;background:#1d4ed8;border-radius:8px;"></div>
-                  <span id="catPct-elective" style="position:absolute;left:36%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">72%</span>
+                  <div style="position:absolute;left:0;top:0;height:100%;width:72%;background:#1d4ed8;border-radius:8px;"></div>
+                  <span style="position:absolute;left:36%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">72%</span>
                 </div>
-                <span id="catCr-elective" style="font-size:11px;color:#6b7280;text-align:right;">17 / 24 cr</span>
+                <span style="font-size:11px;color:#6b7280;text-align:right;">17 / 24 cr</span>
               </div>
               <div style="display:grid; grid-template-columns:130px 1fr 80px; gap:8px; align-items:center; margin:7px 0;">
                 <span style="font-size:12px; color:#374151; font-weight:500;">Free Electives</span>
                 <div style="position:relative; height:15px; background:#e5e7eb; border-radius:8px; overflow:hidden;">
-                  <div id="catBar-free" style="position:absolute;left:0;top:0;height:100%;width:60%;background:#3b82f6;border-radius:8px;"></div>
-                  <span id="catPct-free" style="position:absolute;left:30%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">60%</span>
+                  <div style="position:absolute;left:0;top:0;height:100%;width:60%;background:#3b82f6;border-radius:8px;"></div>
+                  <span style="position:absolute;left:30%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">60%</span>
                 </div>
-                <span id="catCr-free" style="font-size:11px;color:#6b7280;text-align:right;">18 / 30 cr</span>
+                <span style="font-size:11px;color:#6b7280;text-align:right;">18 / 30 cr</span>
               </div>
               <div style="display:grid; grid-template-columns:130px 1fr 80px; gap:8px; align-items:center; margin:7px 0;">
                 <span style="font-size:12px; color:#374151; font-weight:500;">University Core</span>
                 <div style="position:relative; height:15px; background:#e5e7eb; border-radius:8px; overflow:hidden;">
-                  <div id="catBar-core" style="position:absolute;left:0;top:0;height:100%;width:80%;background:#60a5fa;border-radius:8px;"></div>
-                  <span id="catPct-core" style="position:absolute;left:40%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">80%</span>
+                  <div style="position:absolute;left:0;top:0;height:100%;width:80%;background:#60a5fa;border-radius:8px;"></div>
+                  <span style="position:absolute;left:40%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#fff;">80%</span>
                 </div>
-                <span id="catCr-core" style="font-size:11px;color:#6b7280;text-align:right;">24 / 30 cr</span>
+                <span style="font-size:11px;color:#6b7280;text-align:right;">24 / 30 cr</span>
               </div>
               <div style="text-align:right; font-size:11px; color:#9ca3af; margin-top:6px;">Total: 36 + 24 + 30 + 30 = <strong style="color:#374151;">120 cr</strong></div>
             </div>
@@ -211,9 +222,9 @@
             <!-- Left: Coverage metric -->
             <div>
               <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">Communication Coverage</div>
-              <div id="commCovPct" style="font-size:40px; font-weight:700; color:#1d4ed8; line-height:1.1;">—</div>
-              <div class="progress-line" style="height:8px; margin:10px 0 6px;"><div id="commCovBar" class="progress-fill" style="width:0%; background:#1d4ed8;"></div></div>
-              <div id="commCovText" style="font-size:13px; color:#6b7280;">Loading…</div>
+              <div style="font-size:40px; font-weight:700; color:#1d4ed8; line-height:1.1;">82%</div>
+              <div class="progress-line" style="height:8px; margin:10px 0 6px;"><div class="progress-fill" style="width:82%; background:#1d4ed8;"></div></div>
+              <div style="font-size:13px; color:#6b7280;">45 / 55 students contacted recently</div>
             </div>
             <!-- Right: Frequency distribution -->
             <div>
@@ -225,23 +236,23 @@
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">No contact</span>
-                    <span style="color:#ef4444; font-weight:600;"><span id="commNo0Pct">—</span> &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;"><span id="commNo0Count">—</span></span></span>
+                    <span style="color:#ef4444; font-weight:600;">18% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">10 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div id="commNo0Bar" class="progress-fill" style="width:0%; background:#ef4444;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:18%; background:#ef4444;"></div></div>
                 </div>
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">1–2 contacts</span>
-                    <span style="color:#3b82f6; font-weight:600;"><span id="comm12Pct">—</span> &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;"><span id="comm12Count">—</span></span></span>
+                    <span style="color:#3b82f6; font-weight:600;">51% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">28 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div id="comm12Bar" class="progress-fill" style="width:0%; background:#3b82f6;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:51%; background:#3b82f6;"></div></div>
                 </div>
                 <div>
                   <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
                     <span style="color:#374151;">3+ contacts</span>
-                    <span style="color:#1d4ed8; font-weight:600;"><span id="comm3Pct">—</span> &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;"><span id="comm3Count">—</span></span></span>
+                    <span style="color:#1d4ed8; font-weight:600;">31% &nbsp;<span style="color:#9ca3af; font-weight:400; font-size:12px;">17 students</span></span>
                   </div>
-                  <div class="progress-line" style="height:8px; margin:0;"><div id="comm3Bar" class="progress-fill" style="width:0%; background:#1d4ed8;"></div></div>
+                  <div class="progress-line" style="height:8px; margin:0;"><div class="progress-fill" style="width:31%; background:#1d4ed8;"></div></div>
                 </div>
               </div>
             </div>
@@ -270,7 +281,7 @@
           <div id="highRiskConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:16px; margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
               <div style="font-size:13px; font-weight:700; color:#1e3a8a;">Risk Score Configuration</div>
-              <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('highRiskConfig')">Close</button>
+              <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('highRiskConfig')">Close ✕</button>
             </div>
             <div style="font-size:12px; font-family:monospace; color:#1e3a8a; background:#eff6ff; border-radius:8px; padding:10px 14px; margin-bottom:14px; line-height:2;">
               Score = <span id="fw-gpa">40</span>% × GPA Decline + <span id="fw-credit">30</span>% × Credit Delay + <span id="fw-contact">20</span>% × No-Contact + <span id="fw-final">10</span>% × Final-Year Urgency
@@ -332,7 +343,7 @@
               </tbody>
             </table>
           </div>
-          <p style="font-size:12px; color:#9ca3af; margin-top:6px; text-align:right;">Scroll to view all students</p>
+          <p style="font-size:12px; color:#9ca3af; margin-top:6px; text-align:right;">Scroll to view all 14 students ↓</p>
         </div>
 
         <!-- Card 2: Risk Indicators + Priority Students (merged) -->
@@ -349,7 +360,7 @@
           <div id="alertConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:16px; margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <div style="font-size:13px; font-weight:700; color:#1e3a8a;">Alert Threshold Configuration</div>
-              <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('alertConfig')">Close</button>
+              <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('alertConfig')">Close ✕</button>
             </div>
             <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
               <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:12px;">
@@ -373,13 +384,13 @@
           <!-- Risk indicator tiles (3 tiles, clickable with fill on active) -->
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;">
             <div id="rc-credit" onclick="filterMatrix('credit')" style="cursor:pointer; border-radius:12px; padding:14px; border:2px solid #fed7aa; background:#fff; transition:background .15s,border-color .15s;">
-              <span class="badge orange-badge">Credit Alert</span><strong id="rc-credit-count" style="display:block; font-size:18px; margin:8px 0 4px;">— Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Falling behind expected credit progress.</p>
+              <span class="badge orange-badge">Credit Alert</span><strong style="display:block; font-size:18px; margin:8px 0 4px;">9 Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Falling behind expected credit progress.</p>
             </div>
             <div id="rc-gpa" onclick="filterMatrix('gpa')" style="cursor:pointer; border-radius:12px; padding:14px; border:2px solid #fde68a; background:#fff; transition:background .15s,border-color .15s;">
-              <span class="badge yellow">GPA Drop</span><strong id="rc-gpa-count" style="display:block; font-size:18px; margin:8px 0 4px;">— Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Significant GPA decline this semester.</p>
+              <span class="badge yellow">GPA Drop</span><strong style="display:block; font-size:18px; margin:8px 0 4px;">11 Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Significant GPA decline this semester.</p>
             </div>
             <div id="rc-contact" onclick="filterMatrix('contact')" style="cursor:pointer; border-radius:12px; padding:14px; border:2px solid #bfdbfe; background:#fff; transition:background .15s,border-color .15s;">
-              <span class="badge blue">No Contact</span><strong id="rc-contact-count" style="display:block; font-size:18px; margin:8px 0 4px;">— Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Have not met their advisor recently.</p>
+              <span class="badge blue">No Contact</span><strong style="display:block; font-size:18px; margin:8px 0 4px;">18 Students</strong><p style="font-size:12px; color:#6b7280; margin:0;">Have not met their advisor recently.</p>
             </div>
           </div>
 
@@ -392,7 +403,7 @@
               <option value="contact">No Contact</option>
               <option value="final">Final-year Urgency</option>
             </select>
-            <button class="btn secondary" id="clearFilterBtn" onclick="filterMatrix('all')" style="display:none; font-size:12px; padding:6px 12px;">Clear filter</button>
+            <button class="btn secondary" id="clearFilterBtn" onclick="filterMatrix('all')" style="display:none; font-size:12px; padding:6px 12px;">✕ Clear filter</button>
           </div>
 
           <table id="riskTable">
@@ -414,7 +425,7 @@
               <h2 id="profileTitle" style="margin-bottom:4px;">Student Profile</h2>
               <div id="profileBadges"><span class="badge blue">Year 3</span><span class="badge" style="background:#dbeafe;color:#1e40af;">Financial Mathematics</span></div>
             </div>
-            <button class="btn secondary" onclick="closeProfile()">Close</button>
+            <button class="btn secondary" onclick="closeProfile()">Close ✕</button>
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
             <div>
@@ -486,7 +497,7 @@
             <div style="padding:14px 16px 8px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <h2 style="margin-bottom:0; font-size:17px;">Advisee List</h2>
-                <button class="btn secondary" onclick="clearSmFilters()" style="font-size:11px; padding:4px 10px;">Clear filters</button>
+                <button class="btn secondary" onclick="clearSmFilters()" style="font-size:11px; padding:4px 10px;">✕ Clear filters</button>
               </div>
               <!-- Risk colour legend -->
               <div style="font-size:11px; color:#6b7280; margin-bottom:2px; font-weight:600;">Risk Level:</div>
@@ -642,13 +653,12 @@
   </div>
 
   <script>
-    /* ── Global API data store ── */
-    var _dashData = null;
+    function toggleSidebar() {
+      document.querySelector('.app').classList.toggle('sidebar-collapsed');
+    }
 
     function logout() {
-      try { localStorage.removeItem('cuhksz_session'); } catch (e) {}
-      try { sessionStorage.removeItem('cuhksz_user_session'); } catch (e) {}
-      location.href = '/app';
+      location.reload();
     }
 
     function showPage(pageId, element) {
@@ -728,66 +738,94 @@
       document.getElementById('priorityCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    /* ── Profile helpers (data comes from _dashData) ── */
-    function _getStudentByName(name) {
-      if (!_dashData) return null;
-      return (_dashData.students || []).find(function(s) { return s.name === name; }) || null;
-    }
-
-    function _renderMissingCourses(missing, containerId) {
-      var catColors = {
-        'Major Required': ['#fee2e2','#b91c1c'],
-        'Electives':      ['#fef3c7','#92400e'],
-        'University Core':['#dbeafe','#1e40af']
-      };
-      var html = '';
-      if (missing) {
-        Object.keys(missing).forEach(function(cat) {
-          var courses = missing[cat];
-          if (!courses || !courses.length) return;
-          var c = catColors[cat] || ['#f3f4f6','#374151'];
-          html += '<div style="margin-bottom:10px;">';
-          html += '<div style="font-size:11px;font-weight:600;color:' + c[1] + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">' + cat + '</div>';
-          html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-          courses.forEach(function(course) {
-            html += '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:3px 9px;border-radius:6px;font-size:12px;">' + course + '</span>';
-          });
-          html += '</div></div>';
-        });
+    var profileStudentData = {
+      'Amy Chen':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '2.61', credits: '70%', creditVal: '84/120', reason: 'GPA drop and no recent contact',
+        history: [['Mar 10','Discussed GPA decline — student expressed stress about coursework.'],['Apr 02','Follow-up meeting planned — not yet confirmed.']],
+        alert: 'Last contact over 120 days ago', notes: 'Student may need academic planning support and follow-up meeting. Consider discussing course load reduction options.',
+        missing: { 'Major Required': ['MAT3002','STA2001'], 'Electives': ['FIN3010'], 'University Core': ['GEC1000'] }
+      },
+      'Tom Lee':   { year: 'Year 4', major: 'Financial Mathematics', gpa: '2.94', credits: '74%', creditVal: '89/120', reason: 'credit progress delay and final-year urgency',
+        history: [['Feb 18','Reviewed graduation requirements — 3 major required courses outstanding.'],['Mar 30','Discussed adding summer session courses.']],
+        alert: 'Last contact 96 days ago', notes: 'Final-year student at risk of delayed graduation. Urgent course planning needed.',
+        missing: { 'Major Required': ['MAT4001','FIN4002','STA3001'], 'Electives': [], 'University Core': [] }
+      },
+      'Jack Wong':  { year: 'Year 2', major: 'Financial Mathematics', gpa: '2.48', credits: '70%', creditVal: '42/60', reason: 'GPA decline',
+        history: [['Jan 15','Initial advising session — academic goals discussed.'],['Feb 28','Midterm check-in — student flagged difficulty in MAT courses.']],
+        alert: 'Last contact 120 days ago', notes: 'GPA has declined two consecutive semesters. Early intervention recommended.',
+        missing: { 'Major Required': ['MAT2001'], 'Electives': ['FIN2005'], 'University Core': [] }
+      },
+      'Linda Zhang':{ year: 'Year 3', major: 'Financial Mathematics', gpa: '3.42', credits: '86%', creditVal: '103/120', reason: 'no recent advisor contact',
+        history: [['Nov 20','Routine check-in — student performing well.']],
+        alert: 'Last contact 135 days ago', notes: 'Strong academic performance. Low risk but overdue for check-in.',
+        missing: { 'Major Required': [], 'Electives': ['FIN3015'], 'University Core': [] }
+      },
+      'Kevin Ng':  { year: 'Year 3', major: 'Financial Mathematics', gpa: '3.01', credits: '62%', creditVal: '74/120', reason: 'credit delay',
+        history: [['Mar 05','Discussed course load — student requested to drop one course.'],['Apr 10','Follow-up on credit plan.']],
+        alert: 'Last contact 58 days ago', notes: 'Behind on credit completion. Needs to add courses next semester to stay on track.',
+        missing: { 'Major Required': ['MAT3005'], 'Electives': ['FIN3008','FIN3012'], 'University Core': ['GEC2000'] }
       }
-      document.getElementById(containerId).innerHTML = html || '<span style="font-size:13px;color:#6b7280;">No missing required courses.</span>';
-    }
-
-    function _renderCommHistory(history, days, containerId) {
-      var html = '';
-      (history || []).forEach(function(item) {
-        html += '<div style="display:flex;gap:10px;align-items:flex-start;">' +
-          '<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">' + (item.date || '') + '</span>' +
-          '<span style="font-size:13px;color:#374151;">' + (item.notes || item.type || '') + '</span></div>';
-      });
-      var alertMsg = days > 90 ? 'Last contact ' + days + ' days ago' : (days === 999 ? 'No contact on record' : 'Last contact ' + days + ' days ago');
-      html += '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px;border-top:1px dashed #e5e7eb;">' +
-        '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">Alert</span>' +
-        '<span style="font-size:13px;color:#b91c1c;font-weight:500;">' + alertMsg + '</span></div>';
-      document.getElementById(containerId).innerHTML = html;
-    }
+    };
 
     function openProfile(name, context) {
-      var d = _getStudentByName(name);
-      if (!d) return;
-      document.getElementById('profileTitle').textContent = 'Student Profile — ' + d.name;
+      var d = profileStudentData[name] || {};
+      document.getElementById('profileTitle').textContent = 'Student Profile — ' + name;
       document.getElementById('profileBadges').innerHTML =
-        '<span class="badge blue">' + d.year_label + '</span>' +
-        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + d.major + '</span>';
+        '<span class="badge blue">' + (d.year||'Year 3') + '</span>' +
+        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + (d.major||'Financial Mathematics') + '</span>';
 
-      var pct = Math.round(d.completion_pct);
+      /* Credit bar */
+      var pct = parseInt(d.credits||'70');
       document.getElementById('profilePanel').querySelector('.progress-fill').style.width = pct + '%';
+      document.getElementById('profilePanel').querySelector('.progress-fill').parentElement.previousElementSibling
+        && (document.getElementById('profilePanel').querySelector('[data-credit]') || null);
 
-      _renderMissingCourses(d.missing_courses, 'missingCoursesBlock');
-      _renderCommHistory(d.history, d.last_contact_days, 'commHistoryBlock');
+      /* Update overall credit text */
+      var creditSpans = document.getElementById('profilePanel').querySelectorAll('span[data-role]');
 
+      /* Missing courses */
+      var missingHtml = '';
+      var catColors = {
+        'Major Required': ['#fee2e2','#b91c1c','#b91c1c'],
+        'Electives':      ['#fef3c7','#92400e','#92400e'],
+        'University Core':['#dbeafe','#1e40af','#1e40af']
+      };
+      if (d.missing) {
+        Object.keys(d.missing).forEach(function(cat) {
+          var courses = d.missing[cat];
+          if (!courses || courses.length === 0) return;
+          var c = catColors[cat] || ['#f3f4f6','#374151','#374151'];
+          missingHtml += '<div style="margin-bottom:10px;">';
+          missingHtml += '<div style="font-size:11px;font-weight:600;color:' + c[2] + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">' + cat + '</div>';
+          missingHtml += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+          courses.forEach(function(course) {
+            missingHtml += '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:3px 9px;border-radius:6px;font-size:12px;">' + course + '</span>';
+          });
+          missingHtml += '</div></div>';
+        });
+      }
+      if (!missingHtml) missingHtml = '<span style="font-size:13px;color:#6b7280;">No missing required courses.</span>';
+      document.getElementById('missingCoursesBlock').innerHTML = missingHtml;
+
+      /* Communication history */
+      var histHtml = '';
+      if (d.history) {
+        d.history.forEach(function(item) {
+          histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+            '<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">' + item[0] + '</span>' +
+            '<span style="font-size:13px;color:#374151;">' + item[1] + '</span></div>';
+        });
+      }
+      histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px;border-top:1px dashed #e5e7eb;">' +
+        '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">Alert</span>' +
+        '<span style="font-size:13px;color:#b91c1c;font-weight:500;">' + (d.alert||'') + '</span></div>';
+      document.getElementById('commHistoryBlock').innerHTML = histHtml;
+
+      /* Notes */
       document.getElementById('profileNotes').value = d.notes || '';
-      document.getElementById('profileEmailBtn').onclick = function() { openModal(d.name, d.reason_text || ''); };
+
+      /* Email button */
+      document.getElementById('profileEmailBtn').onclick = function() { openModal(name, d.reason || ''); };
+
       document.getElementById('profilePanel').style.display = 'block';
       document.getElementById('profilePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -867,6 +905,16 @@
         var credits = parseInt(row.getAttribute('data-credits')) || 0;
         var days    = parseInt(row.getAttribute('data-days')) || 0;
 
+        /* Fallback for static rows without data-year/data-major attributes */
+        if (!yearVal || !majorVal) {
+          var fullName = row.getAttribute('data-name') || '';
+          var profile = profileStudentData[fullName];
+          if (profile) {
+            yearVal = yearVal || profile.year || '';
+            majorVal = majorVal || profile.major || '';
+          }
+        }
+
         var ok = true;
         if (risk    !== 'all' && riskVal !== risk) ok = false;
         if (year    !== 'all' && yearVal !== year) ok = false;
@@ -885,30 +933,73 @@
       document.getElementById('smNoResults').style.display = visible === 0 ? 'block' : 'none';
     }
 
+    var smActiveRow = null;
     function openStudentProfile(name) {
-      var d = _getStudentByName(name);
+      var d = profileStudentData[name];
       if (!d) return;
 
-      document.querySelectorAll('#smTableBody tr').forEach(function(r) { r.style.background = ''; });
+      /* Highlight selected row */
       document.querySelectorAll('#smTableBody tr').forEach(function(r) {
+        r.style.background = '';
+      });
+      var rows = document.querySelectorAll('#smTableBody tr');
+      rows.forEach(function(r) {
         if ((r.getAttribute('data-name') || '') === name) r.style.background = '#eff6ff';
       });
 
-      document.getElementById('smProfileTitle').textContent = 'Student Profile — ' + d.name;
+      /* Fill profile */
+      document.getElementById('smProfileTitle').textContent = 'Student Profile — ' + name;
       document.getElementById('smProfileBadges').innerHTML =
-        '<span class="badge blue">' + d.year_label + '</span>' +
-        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + d.major + '</span>';
+        '<span class="badge blue">' + (d.year||'Year 3') + '</span>' +
+        '<span class="badge" style="background:#dbeafe;color:#1e40af;margin-left:6px;">' + (d.major||'Financial Mathematics') + '</span>';
 
-      var pct = Math.round(d.completion_pct);
-      document.getElementById('smCreditPct').textContent = pct + '% (' + d.total_credits + ' / 120 credits)';
+      /* Credit bar */
+      var pct = parseInt(d.credits||'70');
+      document.getElementById('smCreditPct').textContent = pct + '% (' + (d.creditVal||'') + ' credits)';
       document.getElementById('smCreditBar').style.width = pct + '%';
 
-      _renderMissingCourses(d.missing_courses, 'smMissingCourses');
-      _renderCommHistory(d.history, d.last_contact_days, 'smCommHistory');
+      /* Missing courses */
+      var catColors = {
+        'Major Required': ['#fee2e2','#b91c1c'],
+        'Electives':      ['#fef3c7','#92400e'],
+        'University Core':['#dbeafe','#1e40af']
+      };
+      var missingHtml = '';
+      if (d.missing) {
+        Object.keys(d.missing).forEach(function(cat) {
+          var courses = d.missing[cat];
+          if (!courses || !courses.length) return;
+          var c = catColors[cat] || ['#f3f4f6','#374151'];
+          missingHtml += '<div style="margin-bottom:9px;">';
+          missingHtml += '<div style="font-size:11px;font-weight:600;color:' + c[1] + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">' + cat + '</div>';
+          missingHtml += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+          courses.forEach(function(course) {
+            missingHtml += '<span style="background:' + c[0] + ';color:' + c[1] + ';padding:2px 8px;border-radius:6px;font-size:12px;">' + course + '</span>';
+          });
+          missingHtml += '</div></div>';
+        });
+      }
+      document.getElementById('smMissingCourses').innerHTML = missingHtml || '<span style="font-size:13px;color:#6b7280;">No missing required courses.</span>';
 
+      /* Comm history */
+      var histHtml = '';
+      (d.history || []).forEach(function(item) {
+        histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+          '<span style="background:#dbeafe;color:#1e40af;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">' + item[0] + '</span>' +
+          '<span style="font-size:13px;color:#374151;">' + item[1] + '</span></div>';
+      });
+      histHtml += '<div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px;border-top:1px dashed #e5e7eb;">' +
+        '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:1px;">Alert</span>' +
+        '<span style="font-size:13px;color:#b91c1c;font-weight:500;">' + (d.alert||'') + '</span></div>';
+      document.getElementById('smCommHistory').innerHTML = histHtml;
+
+      /* Notes */
       document.getElementById('smNotes').value = d.notes || '';
-      document.getElementById('smEmailBtn').onclick = function() { openModal(d.name, d.reason_text || ''); };
 
+      /* Email button */
+      document.getElementById('smEmailBtn').onclick = function() { openModal(name, d.reason || ''); };
+
+      /* Show profile, hide placeholder */
       document.getElementById('smProfileEmpty').style.display = 'none';
       document.getElementById('smProfileContent').style.display = 'block';
     }
@@ -948,94 +1039,32 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script>
-    function applyOverviewFilter() { /* Placeholder — filters applied client-side on load */ }
+    function applyOverviewFilter() { /* Placeholder */ }
 
-    var bubbleCats = ['Major Req','Major Elective','Free Elective','Core'];
-    var bubbleColors = ['#1e3a8a','#1d4ed8','#3b82f6','#60a5fa'];
-
-    /* Built from API data */
-    var bubbleData = { major: { groups: [], counts: [] }, year: { groups: [], counts: [] } };
-
-    function _shortMajorLabel(name) {
-      var raw = (name || 'Other').trim();
-      var map = {
-        'Financial Mathematics': 'Fin. Math',
-        'Computer Science': 'Comp. Sci',
-        'Accounting Data and Analytics': 'Acct Data&Anly',
-        'Accounting and Financial Reporting': 'Acct & Fin Rep',
-        'Computer Science and Engineering': 'CSE',
-        'Data Science and Big Data Technology': 'DS & Big Data',
-        'Financial Engineering - Quantitative Finance': 'FE - Quant',
-        'Statistics': 'Stats'
-      };
-      if (map[raw]) return map[raw];
-      var compact = raw
-        .replace(/\b(Department of|School of|Program in)\b/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      return compact.length > 16 ? compact.slice(0, 14) + '..' : compact;
-    }
-
-    function _buildBubbleData(students) {
-      var TARGET_MAJOR = 36, TARGET_MAJ_ELEC = 24, TARGET_FREE_ELEC = 30, TARGET_CORE = 30;
-      var majorMap = {}, yearMap = {};
-
-      function ensureBucket(map, key) {
-        if (!map[key]) map[key] = { cnt: [0, 0, 0, 0], n: 0 };
+    /* ── Bubble chart: completion distribution by major or year ── */
+    /* ── Grouped bar chart: x = major/year, sub-bars = 5 completion bins ── */
+    var bubbleData = {
+      major: {
+        groups: ['Fin. Math', 'Comp. Sci', 'Economics'],
+        /* counts[groupIndex][binIndex], bins: 0-20,20-40,40-60,60-80,80-100 */
+        counts: [
+          [1, 2, 8, 14, 12],
+          [2, 3, 5,  9,  7],
+          [0, 1, 3,  6,  5]
+        ]
+      },
+      year: {
+        groups: ['Year 1', 'Year 2', 'Year 3', 'Year 4'],
+        counts: [
+          [3, 6, 4, 2, 0],
+          [1, 3, 7, 9, 4],
+          [0, 1, 3,12,11],
+          [0, 0, 2, 5, 9]
+        ]
       }
-
-      var seen = {};
-      students.forEach(function(s) {
-        var sid = String(s.student_id != null ? s.student_id : (s.name || ''));
-        if (!sid || seen[sid]) return;
-        seen[sid] = true;
-        var maj = _shortMajorLabel(s.major);
-        var yr  = s.year_label || 'Year 1';
-        var cp = s.category_progress || {};
-
-        var majorCourses = Number(cp.major_courses || 0);
-        var coreCourses = Number(cp.core_courses || 0);
-        var majorElecCourses = Number(cp.major_elective_courses || 0);
-        var freeElecCourses = Number(cp.free_elective_courses || 0);
-
-        if (!majorElecCourses && !freeElecCourses && cp.elective_courses != null) {
-          var totalElec = Number(cp.elective_courses || 0);
-          majorElecCourses = Math.round(totalElec * 0.6);
-          freeElecCourses = Math.max(0, totalElec - majorElecCourses);
-        }
-
-        var majorPct = Math.min(100, (majorCourses * 3 / TARGET_MAJOR) * 100);
-        var majorElecPct = Math.min(100, (majorElecCourses * 3 / TARGET_MAJ_ELEC) * 100);
-        var freeElecPct = Math.min(100, (freeElecCourses * 3 / TARGET_FREE_ELEC) * 100);
-        var corePct = Math.min(100, (coreCourses * 3 / TARGET_CORE) * 100);
-        var vals = [majorPct, majorElecPct, freeElecPct, corePct];
-
-        ensureBucket(majorMap, maj);
-        ensureBucket(yearMap, yr);
-        for (var i = 0; i < 4; i++) {
-          /* count student if they have non-zero completion in this category */
-          if (vals[i] > 0) {
-            majorMap[maj].cnt[i] += 1;
-            yearMap[yr].cnt[i] += 1;
-          }
-        }
-        majorMap[maj].n += 1;
-        yearMap[yr].n += 1;
-      });
-
-      function toCountRows(map, keys) {
-        return keys.map(function(k) {
-          var b = map[k];
-          if (!b) return [0, 0, 0, 0];
-          return b.cnt.slice();
-        });
-      }
-
-      var majKeys = Object.keys(majorMap).sort();
-      var yrKeys  = ['Year 1','Year 2','Year 3','Year 4'].filter(function(k) { return yearMap[k]; });
-      bubbleData.major = { groups: majKeys, counts: toCountRows(majorMap, majKeys) };
-      bubbleData.year  = { groups: yrKeys,  counts: toCountRows(yearMap, yrKeys) };
-    }
+    };
+    var bins = ['0–20%','20–40%','40–60%','60–80%','80–100%'];
+    var binColors = ['#bfdbfe','#93c5fd','#3b82f6','#1d4ed8','#1e3a8a'];
 
     function drawBubble(mode) {
       document.getElementById('bubbleByMajor').className = mode === 'major' ? 'btn' : 'btn secondary';
@@ -1044,8 +1073,7 @@
       var canvas = document.getElementById('bubbleChart');
       var d = bubbleData[mode];
       var groups = d.groups; var counts = d.counts;
-      var nGroups = groups.length; var nBins = bubbleCats.length;
-      if (!nGroups) return;
+      var nGroups = groups.length; var nBins = bins.length;
 
       var DPR = window.devicePixelRatio || 1;
       var W = canvas.offsetWidth || 500;
@@ -1060,7 +1088,7 @@
       var plotW = W - padL - padR;
       var plotH = H - padT - padB;
 
-      /* Count scale based on max student count */
+      /* Max for y scale */
       var maxN = 1;
       counts.forEach(function(g) { g.forEach(function(v) { if (v > maxN) maxN = v; }); });
       var yMax = Math.ceil(maxN / 5) * 5 + 2;
@@ -1104,7 +1132,7 @@
           var bh = n > 0 ? (n / yMax) * plotH : 0;
           var by = padT + plotH - bh;
 
-          ctx.fillStyle = bubbleColors[b];
+          ctx.fillStyle = binColors[b];
           if (bh > 0) {
             ctx.beginPath();
             if (ctx.roundRect) { ctx.roundRect(bx, by, barW, bh, [2, 2, 0, 0]); }
@@ -1114,294 +1142,94 @@
 
           if (n > 0) {
             ctx.fillStyle = '#1e3a8a'; ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center';
-            ctx.fillText(Math.round(n), bx + barW / 2, by - 2);
+            ctx.fillText(n, bx + barW / 2, by - 2);
           }
         }
       }
 
-      /* Legend for categories */
+      /* Legend for bins */
       var legY = H - padB + 24;
       var legItemW = plotW / nBins;
-      bubbleCats.forEach(function(label, i) {
+      bins.forEach(function(label, i) {
         var lx = padL + i * legItemW;
-        ctx.fillStyle = bubbleColors[i];
+        ctx.fillStyle = binColors[i];
         ctx.fillRect(lx, legY, 9, 8);
         ctx.fillStyle = '#6b7280'; ctx.font = '9px Arial'; ctx.textAlign = 'left';
         ctx.fillText(label, lx + 12, legY + 8);
       });
     }
 
-    var _gpaDistChart = null, _gpaTrendChart = null;
-
-    function _renderCreditCategoryBars(progress, studentCount) {
-      var n = Math.max(1, studentCount || 1);
-      var cats = [
-        { key: 'major',         barId: 'catBar-major',    pctId: 'catPct-major',    crId: 'catCr-major' },
-        { key: 'elective',      barId: 'catBar-elective', pctId: 'catPct-elective', crId: 'catCr-elective' },
-        { key: 'free_elective', barId: 'catBar-free',     pctId: 'catPct-free',     crId: 'catCr-free' },
-        { key: 'core',          barId: 'catBar-core',     pctId: 'catPct-core',     crId: 'catCr-core' }
-      ];
-      cats.forEach(function(c) {
-        var d = progress[c.key];
-        if (!d) return;
-        var doneAvg = d.done;
-        var targetAvg = d.target;
-
-        /* If API sends cohort sums, convert to per-student averages */
-        if (d.target > 120 || d.done > 120) {
-          doneAvg = d.done / n;
-          targetAvg = d.target / n;
-        }
-
-        /* Guardrail: category completion cannot exceed its category target */
-        if (targetAvg > 0 && doneAvg > targetAvg) {
-          console.warn('[overview] category credits exceed target:', c.key, {
-            doneRaw: d.done,
-            targetRaw: d.target,
-            doneAvg: doneAvg,
-            targetAvg: targetAvg
-          });
-        }
-        var doneDisplay = Math.min(doneAvg, targetAvg);
-        var pctRaw = targetAvg > 0 ? (doneDisplay / targetAvg) * 100 : 0;
-        var pct = Math.min(100, Math.round(pctRaw));
-        document.getElementById(c.barId).style.width = pct + '%';
-        document.getElementById(c.pctId).textContent = pct + '%';
-        document.getElementById(c.pctId).style.left = Math.round(pct / 2) + '%';
-        document.getElementById(c.crId).textContent = Math.round(doneDisplay) + ' / ' + Math.round(targetAvg) + ' cr';
-      });
-    }
-
-    function _renderOverview(data) {
-      var ov = data.overview;
-      var prog = ov.progress;
-
-      /* Avg completion header */
-      var avgPct = prog.avg_completion_pct;
-      var avgDone = prog.avg_credits_done;
-      document.querySelector('#overview .metric-avg-pct') && (document.querySelector('#overview .metric-avg-pct').textContent = avgPct + '%');
-      /* Update the inline header values */
-      var hdrPct  = document.getElementById('hdrAvgPct');
-      var hdrCr   = document.getElementById('hdrAvgCr');
-      var hdrBar  = document.getElementById('hdrAvgBar');
-      if (hdrPct) hdrPct.textContent = avgPct + '%';
-      if (hdrCr)  hdrCr.textContent  = avgDone + ' / 120 cr';
-      if (hdrBar) hdrBar.style.width  = Math.min(100, avgPct) + '%';
-
-      /* Credit category bars */
-      var studentsCount = ((_dashData && _dashData.students) ? _dashData.students.length : 1);
-      _renderCreditCategoryBars(prog, studentsCount);
-
-      /* Communication coverage */
-      var comm = ov.communication;
-      var total = comm.total_students || 1;
-      var recentPct = Math.round((comm.recently_contacted / total) * 100);
-      var noContactPct  = Math.round((comm.no_contact  / total) * 100);
-      var contacts12Pct = Math.round((comm.contacts_1_2 / total) * 100);
-      var contacts3Pct  = Math.round((comm.contacts_3_plus / total) * 100);
-
-      var el;
-      el = document.getElementById('commCovPct');   if (el) el.textContent = recentPct + '%';
-      el = document.getElementById('commCovBar');   if (el) el.style.width = recentPct + '%';
-      el = document.getElementById('commCovText');  if (el) el.textContent = comm.recently_contacted + ' / ' + total + ' students contacted recently';
-
-      el = document.getElementById('commNo0Pct');   if (el) el.textContent = noContactPct + '%';
-      el = document.getElementById('commNo0Count'); if (el) el.textContent = comm.no_contact + ' students';
-      el = document.getElementById('commNo0Bar');   if (el) el.style.width = noContactPct + '%';
-
-      el = document.getElementById('comm12Pct');    if (el) el.textContent = contacts12Pct + '%';
-      el = document.getElementById('comm12Count');  if (el) el.textContent = comm.contacts_1_2 + ' students';
-      el = document.getElementById('comm12Bar');    if (el) el.style.width = contacts12Pct + '%';
-
-      el = document.getElementById('comm3Pct');     if (el) el.textContent = contacts3Pct + '%';
-      el = document.getElementById('comm3Count');   if (el) el.textContent = comm.contacts_3_plus + ' students';
-      el = document.getElementById('comm3Bar');     if (el) el.style.width = contacts3Pct + '%';
-
-      /* GPA Distribution chart */
-      var gpaD = ov.gpa_distribution;
-      if (_gpaDistChart) {
-        _gpaDistChart.data.labels = gpaD.labels;
-        _gpaDistChart.data.datasets[0].data = gpaD.values;
-        _gpaDistChart.update();
-      } else {
-        _gpaDistChart = new Chart(document.getElementById('gpaDistChart'), {
-          type: 'bar',
-          data: {
-            labels: gpaD.labels,
-            datasets: [{ label: 'Students', data: gpaD.values, backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y + ' students'; } } } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 12 } } },
-              y: { grid: { color: '#f3f4f6' }, ticks: { color: '#6b7280', font: { size: 11 }, stepSize: 5 }, beginAtZero: true }
-            }
-          }
-        });
-      }
-
-      /* GPA Trend chart */
-      var gpaT = ov.gpa_trend;
-      var gpaVals = gpaT.values;
-      var gpaMin = gpaVals.length ? Math.max(0, Math.floor(Math.min.apply(null, gpaVals) * 10) / 10 - 0.2) : 2.0;
-      var gpaMax = gpaVals.length ? Math.ceil(Math.max.apply(null, gpaVals) * 10) / 10 + 0.2 : 4.0;
-      if (_gpaTrendChart) {
-        _gpaTrendChart.data.labels = gpaT.labels;
-        _gpaTrendChart.data.datasets[0].data = gpaVals;
-        _gpaTrendChart.options.scales.y.min = gpaMin;
-        _gpaTrendChart.options.scales.y.max = gpaMax;
-        _gpaTrendChart.update();
-      } else {
-        _gpaTrendChart = new Chart(document.getElementById('gpaTrendChart'), {
-          type: 'line',
-          data: {
-            labels: gpaT.labels,
-            datasets: [{
-              label: 'Avg GPA', data: gpaVals,
-              borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
-              tension: 0.35, pointRadius: 5, pointBackgroundColor: '#3b82f6', fill: true, borderWidth: 3
-            }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
-              y: { grid: { color: '#f3f4f6' }, min: gpaMin, max: gpaMax,
-                ticks: { stepSize: 0.2, callback: function(v) { return v.toFixed(1); }, color: '#6b7280', font: { size: 11 } }
-              }
-            }
-          }
-        });
-      }
-    }
-
-    function _renderRiskSection(students, riskSummary) {
-      /* Risk indicator tiles */
-      var el;
-      el = document.getElementById('rc-credit-count'); if (el) el.textContent = riskSummary.credit_alert_count + ' Students';
-      el = document.getElementById('rc-gpa-count');    if (el) el.textContent = riskSummary.gpa_drop_count + ' Students';
-      el = document.getElementById('rc-contact-count');if (el) el.textContent = riskSummary.no_contact_count + ' Students';
-
-      /* High-risk table */
-      var highBody = document.querySelector('#highRiskTable tbody');
-      highBody.innerHTML = '';
-      var riskBadgeClass = function(score) { return score >= 85 ? 'red' : score >= 70 ? 'orange-badge' : 'yellow'; };
-      students.filter(function(s) { return s.risk_level === 'High'; }).forEach(function(s) {
-        var daysText = s.last_contact_days >= 999 ? 'No contact' : s.last_contact_days + ' days ago';
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-type', s.risk_tags.join(' '));
-        tr.setAttribute('data-category', 'high ' + s.risk_tags.join(' '));
-        tr.setAttribute('data-score', s.risk_score);
-        tr.innerHTML = '<td><strong>' + s.name + '</strong></td>' +
-          '<td><span class="badge ' + riskBadgeClass(s.risk_score) + '">' + s.risk_score + '</span></td>' +
-          '<td>' + s.reason_text + '</td>' +
-          '<td>' + daysText + '</td>' +
-          '<td><button class="btn secondary" onclick="openProfile(\'' + s.name + '\',\'high\')">View Detail</button>' +
-          '<button class="btn" onclick="openModal(\'' + s.name + '\',\'' + s.reason_text + '\')">Send Email</button></td>';
-        highBody.appendChild(tr);
-      });
-
-      /* Risk table (all students) */
-      var riskBody = document.querySelector('#riskTable tbody');
-      riskBody.innerHTML = '';
-      students.forEach(function(s) {
-        var daysText = s.last_contact_days >= 999 ? 'No contact' : s.last_contact_days + ' days ago';
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-type', s.risk_tags.join(' '));
-        tr.setAttribute('data-category', (s.risk_level === 'High' ? 'high ' : '') + s.risk_tags.join(' '));
-        tr.innerHTML = '<td>' + s.name + '</td>' +
-          '<td><span class="badge ' + riskBadgeClass(s.risk_score) + '">' + s.risk_score + '</span></td>' +
-          '<td>' + s.reason_text + '</td>' +
-          '<td>' + daysText + '</td>' +
-          '<td><button class="btn secondary" onclick="openProfile(\'' + s.name + '\',\'risk\')">View Detail</button>' +
-          '<button class="btn" onclick="openModal(\'' + s.name + '\',\'' + s.reason_text + '\')">Send Email</button></td>';
-        riskBody.appendChild(tr);
-      });
-
-      applyHighRiskThreshold();
-    }
-
-    function _renderStudentManagement(students) {
-      /* Populate filter dropdowns with unique values from data */
-      var majors = {}, years = {};
-      students.forEach(function(s) {
-        majors[s.major] = true;
-        years[s.year_label] = true;
-      });
-
-      var majorSel = document.getElementById('sm-filter-major');
-      var yearSel  = document.getElementById('sm-filter-year');
-      /* Keep "All" option, rebuild rest */
-      majorSel.innerHTML = '<option value="all">Major: All</option>';
-      yearSel.innerHTML  = '<option value="all">Year: All</option>';
-      Object.keys(majors).sort().forEach(function(m) {
-        majorSel.innerHTML += '<option value="' + m + '">' + m + '</option>';
-      });
-      ['Year 1','Year 2','Year 3','Year 4'].filter(function(y){ return years[y]; }).forEach(function(y) {
-        yearSel.innerHTML += '<option value="' + y + '">' + y + '</option>';
-      });
-
-      /* Also update Overview filter dropdowns */
-      var ovMajor = document.getElementById('filterMajor');
-      if (ovMajor) {
-        ovMajor.innerHTML = '<option value="all">Major: All</option>';
-        Object.keys(majors).sort().forEach(function(m) {
-          ovMajor.innerHTML += '<option value="' + m + '">' + m + '</option>';
-        });
-      }
-
-      /* Student table */
-      var tbody = document.getElementById('smTableBody');
-      tbody.innerHTML = '';
-      var riskRowStyle = { High: ['#fee2e2','#991b1b'], Medium: ['#ffedd5','#9a3412'], Low: ['#dcfce7','#166534'] };
-      students.forEach(function(s) {
-        var rs = riskRowStyle[s.risk_level] || ['#f3f4f6','#374151'];
-        var daysText = s.last_contact_days >= 999 ? '—' : s.last_contact_days + 'd';
-        var pct = Math.round(s.completion_pct);
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-name', s.name);
-        tr.setAttribute('data-risk', s.risk_level);
-        tr.setAttribute('data-gpa',  s.gpa);
-        tr.setAttribute('data-credits', pct);
-        tr.setAttribute('data-days', s.last_contact_days);
-        tr.setAttribute('data-year', s.year_label);
-        tr.setAttribute('data-major', s.major);
-        tr.style.cursor = 'pointer';
-        tr.className = 'sm-row';
-        tr.setAttribute('onclick', 'openStudentProfile(\'' + s.name.replace(/'/g,"\\'") + '\')');
-        tr.innerHTML =
-          '<td style="font-weight:600;background:' + rs[0] + ';color:' + rs[1] + ';padding:10px 12px;">' + s.name + '</td>' +
-          '<td style="font-size:13px;">' + s.gpa.toFixed(2) + '</td>' +
-          '<td style="padding:8px 6px;"><div style="display:flex;align-items:center;gap:5px;"><div style="flex:1;height:6px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="width:' + pct + '%;height:100%;background:#1d4ed8;border-radius:4px;"></div></div><span style="font-size:11px;color:#374151;white-space:nowrap;">' + pct + '%</span></div></td>' +
-          '<td style="font-size:13px;">' + daysText + '</td>';
-        tbody.appendChild(tr);
-      });
-      filterStudentList();
-    }
-
-    window.addEventListener('load', function() {
-      fetch('/api/advising/dashboard')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          _dashData = data;
-          _buildBubbleData(data.students || []);
-          drawBubble('major');
-          _renderOverview(data);
-          _renderRiskSection(data.students || [], data.risk_summary || {});
-          _renderStudentManagement(data.students || []);
-        })
-        .catch(function(err) {
-          console.error('Dashboard API error:', err);
-          drawBubble('major');
-          applyHighRiskThreshold();
-        });
-    });
-
+    window.addEventListener('load', function() { drawBubble('major'); applyHighRiskThreshold(); });
     window.addEventListener('resize', function() {
       var m = document.getElementById('bubbleByMajor');
       if (m) drawBubble(m.className.indexOf('secondary') === -1 ? 'major' : 'year');
+    });
+
+    new Chart(document.getElementById('gpaDistChart'), {
+      type: 'bar',
+      data: {
+        labels: ['<2.0', '2.0–2.5', '2.5–3.0', '3.0–3.5', '≥3.5'],
+        datasets: [{ label: 'Students', data: [2, 8, 12, 15, 18], backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y + ' students'; } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 12 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { color: '#6b7280', font: { size: 11 }, stepSize: 5 }, beginAtZero: true }
+        }
+      }
+    });
+
+    /* GPA Trend Line Chart */
+    new Chart(document.getElementById('gpaTrendChart'), {
+      type: 'line',
+      data: {
+        labels: ['SPR 24', 'SUM 24', 'FAL 24', 'SPR 25', 'SUM 25', 'FAL 25'],
+        datasets: [{
+          label: 'Avg GPA', data: [3.21, 3.18, 3.14, 3.09, 3.04, 2.98],
+          borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+          tension: 0.35, pointRadius: 5, pointBackgroundColor: '#3b82f6', fill: true, borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, min: 2.6, max: 3.5,
+            ticks: { stepSize: 0.2, callback: function(v) { return v.toFixed(1); }, color: '#6b7280', font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    /* Progress Bar Chart */
+    new Chart(document.getElementById('progressBarChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Major Required (36cr)', 'Electives (24cr)', 'Univ. Core (20cr)'],
+        datasets: [{
+          label: 'Avg Completion %', data: [50, 72, 80],
+          backgroundColor: ['#1d4ed8', '#3b82f6', '#1e40af'], borderRadius: 6, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx) {
+            var credits = [18, 17, 16]; var total = [36, 24, 20];
+            return ctx.parsed.y + '% (' + credits[ctx.dataIndex] + '/' + total[ctx.dataIndex] + 'cr)';
+          }}}
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, min: 0, max: 100,
+            ticks: { callback: function(v) { return v + '%'; }, color: '#6b7280', font: { size: 11 } }
+          }
+        }
+      }
     });
   </script>
 </body>

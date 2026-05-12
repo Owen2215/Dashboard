@@ -1129,6 +1129,22 @@ function gpaToIdx(gpa){
   });
   return best;
 }
+function semSortValue(sem, fallback){
+  const s = String(sem || '').trim().toUpperCase();
+  let m = s.match(/^([FS])\s*(\d{2})$/);
+  if (m){
+    const yy = parseInt(m[2], 10);
+    const term = m[1] === 'F' ? 0 : 1;
+    return 2000 + yy * 2 + term;
+  }
+  m = s.match(/^(\d{4})-(\d{2})\s*TERM\s*([12])$/i);
+  if (m){
+    const y = parseInt(m[1], 10);
+    const term = String(m[3]) === '1' ? 0 : 1;
+    return y * 2 + term;
+  }
+  return 100000 + (fallback || 0);
+}
 
 function addGrade(){
   const sem = document.getElementById('g-sem').value;
@@ -1180,15 +1196,26 @@ function renderGPAChart(){
     document.getElementById('gpa-stats').textContent = 'CGPA: — · Latest sem: —';
     return;
   }
-  // Group by semester (chronological)
-  const semOrder = ['F23','S24','F24','S25','F25','S26','F26','S27','F27','S28'];
-  const byCourse = gpaRecords.slice().sort((a,b) => semOrder.indexOf(a.sem) - semOrder.indexOf(b.sem));
+  // Group by semester (dynamic chronological ordering from actual records)
   const semGroups = {};
-  byCourse.forEach(g => { (semGroups[g.sem] = semGroups[g.sem]||[]).push(g); });
-  const sems = semOrder.filter(s => semGroups[s]);
+  const semFirstSeen = {};
+  gpaRecords.forEach((g, i) => {
+    const sem = String(g.sem || '').trim().toUpperCase();
+    if (!(sem in semFirstSeen)) semFirstSeen[sem] = i;
+    (semGroups[sem] = semGroups[sem] || []).push({...g, sem});
+  });
+  const sems = Object.keys(semGroups).sort((a, b) => semSortValue(a, semFirstSeen[a]) - semSortValue(b, semFirstSeen[b]));
+  const semIdx = {};
+  sems.forEach((s, i) => { semIdx[s] = i; });
+  const byCourse = gpaRecords
+    .map((g, i) => ({...g, sem: String(g.sem || '').trim().toUpperCase(), __i: i}))
+    .sort((a, b) => {
+      const d = semSortValue(a.sem, a.__i) - semSortValue(b.sem, b.__i);
+      return d || (a.__i - b.__i);
+    });
 
   // Each course = a point
-  const coursePoints = byCourse.map(g => ({x:sems.indexOf(g.sem), y:GRADE_ORDER.indexOf(g.grade), label:`${g.code}: ${g.grade}`}));
+  const coursePoints = byCourse.map(g => ({x:semIdx[g.sem], y:GRADE_ORDER.indexOf(g.grade), label:`${g.code}: ${g.grade}`}));
   // Semester GPA = average of grade points (4.0 scale) → map back to letter index proximately
   const semGPA = sems.map((s,i) => {
     const arr = semGroups[s];
@@ -1223,7 +1250,7 @@ function renderGPAChart(){
       responsive:true, maintainAspectRatio:false,
       scales:{
         x:{type:'linear', min:-0.3, max:sems.length-0.7,
-           ticks:{callback:(v)=>sems[v]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},
+           ticks:{callback:(v)=>sems[Math.round(v)]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},
            title:{display:true,text:'Semester',font:{size:12,weight:'600'},color:'#5a6076',padding:{top:6}}},
         y:{min:-0.5, max:GRADE_ORDER.length-0.5,
            ticks:{callback:(v)=>GRADE_ORDER[v]||'', stepSize:1, font:{size:13, weight:'700'}, color:'#1a1d2e'},
