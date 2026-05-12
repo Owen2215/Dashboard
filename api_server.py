@@ -14,15 +14,36 @@ import json
 import os
 from datetime import date
 import re
+from urllib.parse import urlparse
 
 # ── Config ──────────────────────────────────────────────────────────
-DB_CONFIG = {
-    "host":     "localhost",
-    "port":     3306,
-    "database": "course_db",
-    "user":     "root",
-    "password": "123",
-}
+def _build_db_config():
+    mysql_url = os.getenv("MYSQL_URL", "").strip()
+    if mysql_url:
+        u = urlparse(mysql_url)
+        cfg = {
+            "host": u.hostname or "localhost",
+            "port": int(u.port or 3306),
+            "database": (u.path or "/").lstrip("/") or "course_db",
+            "user": u.username or "root",
+            "password": u.password or "",
+        }
+    else:
+        cfg = {
+            "host":     os.getenv("DB_HOST", "localhost"),
+            "port":     int(os.getenv("DB_PORT", "3306")),
+            "database": os.getenv("DB_NAME", "course_db"),
+            "user":     os.getenv("DB_USER", "root"),
+            "password": os.getenv("DB_PASSWORD", ""),
+        }
+
+    # For managed cloud MySQL, SSL is typically required.
+    ssl_disabled = os.getenv("DB_SSL_DISABLED", "false").lower() == "true"
+    if not ssl_disabled:
+        cfg["ssl_disabled"] = False
+    return cfg
+
+DB_CONFIG = _build_db_config()
 
 SHEET_TO_DEPT = {
     "ACT":  "ACT",
