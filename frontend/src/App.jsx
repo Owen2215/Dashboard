@@ -4,13 +4,15 @@ import { User, Mail, LogIn } from 'lucide-react';
 import loginLogo from '../../assets/Image_20260513001106_704_33.png';
 
 // ── TEST MODE: Set to true to bypass credential validation ──
-const SKIP_CREDENTIALS = true;
+const SKIP_CREDENTIALS = false;
 
 export default function App() {
   const [role, setRole] = useState('student');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [showEmailDropdown, setShowEmailDropdown] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [advisorError, setAdvisorError] = useState('');
   const emailInputRef = useRef(null);
 
   const emailRule = useMemo(() => {
@@ -22,15 +24,40 @@ export default function App() {
   const emailValid = SKIP_CREDENTIALS || email.toLowerCase().endsWith(emailRule.suffix);
   const nameValid = SKIP_CREDENTIALS || fullName.trim();
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
+    setAdvisorError('');
     if (!nameValid || !emailValid) return;
+
+    let advisorSchool = null;
+    if (!SKIP_CREDENTIALS && role === 'advisor') {
+      try {
+        setAuthBusy(true);
+        const qs = new URLSearchParams({
+          username: fullName.trim(),
+          email: email.trim(),
+        });
+        const resp = await fetch(`/api/auth/advisor?${qs.toString()}`);
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          setAdvisorError('Advisor credentials not found in advisor table.');
+          return;
+        }
+        advisorSchool = data?.advisor?.school || null;
+      } catch (err) {
+        setAdvisorError('Unable to validate advisor credentials.');
+        return;
+      } finally {
+        setAuthBusy(false);
+      }
+    }
 
     const session = {
       role,
       name: fullName.trim() || `Test ${role}`,
       fullName: fullName.trim() || `Test ${role}`,
       email: email.trim() || `test@${role}.local`,
+      school: role === 'advisor' ? advisorSchool : null,
       loginAt: new Date().toISOString(),
     };
 
@@ -123,11 +150,11 @@ export default function App() {
             <label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 <User size={18} />
-                Full Name
+                Username
               </div>
               <input
                 type="text"
-                placeholder="e.g. John Doe"
+                placeholder="e.g. John"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -191,9 +218,31 @@ export default function App() {
               Must end with <code>{emailRule.suffix}</code>
             </small>
 
-            <button type="submit" disabled={SKIP_CREDENTIALS ? false : (!fullName.trim() || !emailValid)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            {role === 'student' && (
+              <small className="hint">
+                Student login hint:
+                {' '}
+                <code>sophiawang / 122040267@link.cuhk.edu.cn</code>
+              </small>
+            )}
+
+            {role === 'advisor' && (
+              <small className="hint">
+                Advisor login hint:
+                {' '}
+                <code>Bohui / bohui@cuhk.edu.cn</code>
+                {' · '}
+                <code>Minghua / minghua@cuhk.edu.cn</code>
+              </small>
+            )}
+
+            {role === 'advisor' && advisorError && (
+              <small className="hint error">{advisorError}</small>
+            )}
+
+            <button type="submit" disabled={authBusy || (SKIP_CREDENTIALS ? false : (!fullName.trim() || !emailValid))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <LogIn size={18} />
-              Continue with CUHK SSO
+              {authBusy ? 'Checking advisor credentials…' : 'Continue with CUHK SSO'}
             </button>
           </form>
         </div>
