@@ -4,15 +4,16 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>User Guide · Study Dashboard</title>
+<link rel="icon" type="image/png" href="../assets/Image_20260513001106_704_33.png"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --purple:#0070e0;--accent:#0070e0;--bg:#f5f4f9;--surface:#fff;
-  --border:#e2e5ed;--text:#1a1d2e;--text2:#5a6076;--text3:#9198b0;
+  --nav:#0070e0;--accent:#009cde;--bg:#f2f8ff;--surface:#fff;
+  --border:#d8e6f7;--text:#102a43;--text2:#486581;--text3:#829ab1;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
      background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
-.topnav{background:var(--purple);display:flex;align-items:center;height:52px;padding:0 20px;position:sticky;top:0;z-index:100}
+.topnav{background:var(--nav);display:flex;align-items:center;height:52px;padding:0 20px;position:sticky;top:0;z-index:100}
 .nav-logo{color:#fff;font-weight:800;font-size:14px;margin-right:16px;text-decoration:none}
 .nav-link{color:rgba(255,255,255,.7);font-size:13px;text-decoration:none;padding:6px 12px;border-radius:6px}
 .nav-link:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -32,13 +33,13 @@ h1{font-size:1.8rem;font-weight:900;margin-bottom:6px}
 .scale-cell .r{font-size:13px;font-weight:800}
 .scale-cell .l{font-size:14px;font-weight:800;margin:4px 0}
 .scale-cell .d{font-size:11.5px;line-height:1.4}
-.formula{background:#08306b;color:#bfdbfe;padding:14px 18px;border-radius:10px;font-family:'SF Mono',Consolas,monospace;font-size:13px;margin:10px 0;line-height:1.7}
+.formula{background:#0d57c6;color:#d7ecff;padding:14px 18px;border-radius:10px;font-family:'SF Mono',Consolas,monospace;font-size:13px;margin:10px 0;line-height:1.7}
 .formula b{color:#fff}
-.tip{background:#eff6ff;border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:12.5px;color:#1e40af;margin-top:10px;line-height:1.55}
+.tip{background:#eef7ff;border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:12.5px;color:#0d57c6;margin-top:10px;line-height:1.55}
 .cta{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap}
 .btn{padding:12px 24px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px}
 .btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#1e5e9d}
+.btn-primary:hover{background:#007fc5}
 .btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
 .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
 ul{margin:6px 0 0 18px;font-size:13px;color:var(--text2)}
@@ -47,9 +48,9 @@ ul{margin:6px 0 0 18px;font-size:13px;color:var(--text2)}
 <body>
 
 <nav class="topnav">
-  <a href="student_dashboard_index.html" class="nav-logo">🎓 <span data-i18n="nav.title">Study Dashboard</span></a>
-  <a href="student_dashboard_index.html" class="nav-link">🏠 <span data-i18n="nav.home">Home</span></a>
-  <a href="student_dashboard.html" class="nav-link">📊 <span data-i18n="nav.dashboard">Dashboard</span></a>
+  <a href="index.html" class="nav-logo">🎓 <span data-i18n="nav.title">Study Dashboard</span></a>
+  <a href="index.html" class="nav-link">🏠 <span data-i18n="nav.home">Home</span></a>
+  <a href="student_dashboard_index.html" class="nav-link">📊 <span data-i18n="nav.dashboard">Dashboard</span></a>
   <div class="nav-spacer"></div>
   <div class="lang-toggle">
     <button class="lang-btn" data-lang="en">EN</button>
@@ -162,8 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <div class="cta">
-    <a href="student_dashboard.html" class="btn btn-primary">🚀 Open the Dashboard</a>
-    <a href="student_dashboard_index.html" class="btn btn-outline">← Back home</a>
+    <a href="student_dashboard_index.html" class="btn btn-primary">🚀 Open the Dashboard</a>
+    <a href="index.html" class="btn btn-outline">← Back home</a>
   </div>
 </div>
 

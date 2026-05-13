@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CUHKSZ AA Dashboard Prototype</title>
+  <link rel="icon" type="image/png" href="/assets/Image_20260513001106_704_33.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { background: #f4f6f9; color: #1f2937; }
@@ -295,51 +296,51 @@
           </div>
 
           <!-- Inline config panel: score weights + high-risk threshold -->
-          <div id="highRiskConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div id="highRiskConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:22px; margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-              <div style="font-size:13px; font-weight:700; color:#1e3a8a;">Risk Score Configuration</div>
+              <div style="font-size:15px; font-weight:700; color:#1e3a8a;">Risk Score Configuration</div>
               <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('highRiskConfig')">Close</button>
             </div>
-            <div style="font-size:12px; font-family:monospace; color:#1e3a8a; background:#eff6ff; border-radius:8px; padding:10px 14px; margin-bottom:14px; line-height:2;">
+            <div style="font-size:14px; font-family:monospace; color:#1e3a8a; background:#eff6ff; border-radius:8px; padding:12px 16px; margin-bottom:16px; line-height:2;">
               Score = <span id="fw-gpa">40</span>% × GPA Decline + <span id="fw-credit">30</span>% × Credit Delay + <span id="fw-contact">20</span>% × No-Contact + <span id="fw-final">10</span>% × Final-Year Urgency
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch;">
               <div>
-                <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:10px;">Score Weights</div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                  <div style="background:white; border:1px solid #e0e7ff; border-radius:8px; padding:10px;">
-                    <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">GPA Decline</div>
-                    <div style="display:flex; align-items:center; gap:3px;"><input type="number" id="wi-gpa" min="0" max="100" value="40" style="width:48px; text-align:center; font-weight:700; color:#1d4ed8; font-size:15px;" oninput="updateWeights()"><span style="font-size:12px; color:#9ca3af;">%</span></div>
+                <div style="font-size:14px; font-weight:700; color:#374151; margin-bottom:12px;">Score Weights</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                  <div style="background:white; border:1px solid #e0e7ff; border-radius:10px; padding:12px;">
+                    <div style="font-size:12px; color:#6b7280; margin-bottom:8px;">GPA Decline</div>
+                    <div style="display:flex; align-items:center; gap:5px;"><input type="number" id="wi-gpa" min="0" max="100" value="40" style="width:74px; height:52px; text-align:center; font-weight:800; color:#1d4ed8; font-size:30px; border-radius:14px; border:1px solid #d1d5db;" oninput="updateWeights()"><span style="font-size:20px; color:#9ca3af; font-weight:700;">%</span></div>
                   </div>
-                  <div style="background:white; border:1px solid #e0e7ff; border-radius:8px; padding:10px;">
-                    <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Credit Delay</div>
-                    <div style="display:flex; align-items:center; gap:3px;"><input type="number" id="wi-credit" min="0" max="100" value="30" style="width:48px; text-align:center; font-weight:700; color:#1d4ed8; font-size:15px;" oninput="updateWeights()"><span style="font-size:12px; color:#9ca3af;">%</span></div>
+                  <div style="background:white; border:1px solid #e0e7ff; border-radius:10px; padding:12px;">
+                    <div style="font-size:12px; color:#6b7280; margin-bottom:8px;">Credit Delay</div>
+                    <div style="display:flex; align-items:center; gap:5px;"><input type="number" id="wi-credit" min="0" max="100" value="30" style="width:74px; height:52px; text-align:center; font-weight:800; color:#1d4ed8; font-size:30px; border-radius:14px; border:1px solid #d1d5db;" oninput="updateWeights()"><span style="font-size:20px; color:#9ca3af; font-weight:700;">%</span></div>
                   </div>
-                  <div style="background:white; border:1px solid #e0e7ff; border-radius:8px; padding:10px;">
-                    <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">No-Contact</div>
-                    <div style="display:flex; align-items:center; gap:3px;"><input type="number" id="wi-contact" min="0" max="100" value="20" style="width:48px; text-align:center; font-weight:700; color:#1d4ed8; font-size:15px;" oninput="updateWeights()"><span style="font-size:12px; color:#9ca3af;">%</span></div>
+                  <div style="background:white; border:1px solid #e0e7ff; border-radius:10px; padding:12px;">
+                    <div style="font-size:12px; color:#6b7280; margin-bottom:8px;">No-Contact</div>
+                    <div style="display:flex; align-items:center; gap:5px;"><input type="number" id="wi-contact" min="0" max="100" value="20" style="width:74px; height:52px; text-align:center; font-weight:800; color:#1d4ed8; font-size:30px; border-radius:14px; border:1px solid #d1d5db;" oninput="updateWeights()"><span style="font-size:20px; color:#9ca3af; font-weight:700;">%</span></div>
                   </div>
-                  <div style="background:white; border:1px solid #e0e7ff; border-radius:8px; padding:10px;">
-                    <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Final-Year</div>
-                    <div style="display:flex; align-items:center; gap:3px;"><input type="number" id="wi-final" min="0" max="100" value="10" style="width:48px; text-align:center; font-weight:700; color:#1d4ed8; font-size:15px;" oninput="updateWeights()"><span style="font-size:12px; color:#9ca3af;">%</span></div>
+                  <div style="background:white; border:1px solid #e0e7ff; border-radius:10px; padding:12px;">
+                    <div style="font-size:12px; color:#6b7280; margin-bottom:8px;">Final-Year</div>
+                    <div style="display:flex; align-items:center; gap:5px;"><input type="number" id="wi-final" min="0" max="100" value="10" style="width:74px; height:52px; text-align:center; font-weight:800; color:#1d4ed8; font-size:30px; border-radius:14px; border:1px solid #d1d5db;" oninput="updateWeights()"><span style="font-size:20px; color:#9ca3af; font-weight:700;">%</span></div>
                   </div>
                 </div>
-                <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                  <span style="font-size:12px; color:#6b7280;">Total:</span>
-                  <span id="totalWeight" style="font-size:13px; font-weight:700; color:#15803d;">100%</span>
-                  <span id="weightWarning" style="font-size:11px; color:#b91c1c; display:none;">Must equal 100%</span>
-                  <button class="btn secondary" onclick="resetWeights()" style="font-size:11px; padding:3px 8px; margin-left:auto;">Reset</button>
+                <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:13px; color:#6b7280;">Total:</span>
+                  <span id="totalWeight" style="font-size:16px; font-weight:800; color:#15803d;">100%</span>
+                  <span id="weightWarning" style="font-size:12px; color:#b91c1c; display:none;">Must equal 100%</span>
+                  <button class="btn secondary" onclick="resetWeights()" style="font-size:12px; padding:5px 10px; margin-left:auto;">Reset</button>
                 </div>
               </div>
               <div>
-                <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:10px;">High Risk Threshold</div>
-                <div style="background:#fff1f2; border:1px solid #fecaca; border-radius:10px; padding:12px;">
-                  <div style="font-size:12px; color:#374151; line-height:2.2;">
+                <div style="font-size:14px; font-weight:700; color:#374151; margin-bottom:12px;">High Risk Threshold</div>
+                <div style="background:#fff1f2; border:1px solid #fecaca; border-radius:10px; padding:16px; min-height:100%;">
+                  <div style="font-size:17px; color:#374151; line-height:2.2; font-weight:600;">
                     Flag as High Risk if Score ≥
-                    <input type="number" id="th-high-risk" min="50" max="100" value="85" style="width:54px; text-align:center; font-weight:700; color:#b91c1c; font-size:14px; padding:2px 5px;" oninput="applyHighRiskThreshold()">
+                    <input type="number" id="th-high-risk" min="50" max="100" value="85" style="width:88px; height:44px; text-align:center; font-weight:800; color:#b91c1c; font-size:30px; padding:2px 8px; border-radius:20px; border:1px solid #d1d5db;" oninput="applyHighRiskThreshold()">
                   </div>
-                  <div id="high-risk-eg" style="font-size:11px; color:#9ca3af; margin-top:4px;">Showing students with score ≥ 85</div>
-                  <div style="margin-top:8px;"><span id="high-risk-count" class="badge red" style="font-size:12px; padding:3px 10px;">2 students</span></div>
+                  <div id="high-risk-eg" style="font-size:13px; color:#9ca3af; margin-top:4px;">Showing students with score ≥ 85</div>
+                  <div style="margin-top:10px;"><span id="high-risk-count" class="badge red" style="font-size:14px; padding:6px 14px;">2 students</span></div>
                 </div>
               </div>
             </div>
@@ -374,26 +375,26 @@
           </div>
 
           <!-- Inline alert threshold config -->
-          <div id="alertConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div id="alertConfig" style="display:none; background:#f8faff; border:1px solid #c7d7fb; border-radius:12px; padding:22px; margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div style="font-size:13px; font-weight:700; color:#1e3a8a;">Alert Threshold Configuration</div>
+              <div style="font-size:15px; font-weight:700; color:#1e3a8a;">Alert Threshold Configuration</div>
               <button class="btn secondary" style="font-size:11px; padding:3px 10px;" onclick="togglePanel('alertConfig')">Close</button>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
-              <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:12px;">
-                <div style="font-size:12px; font-weight:600; color:#92400e; margin-bottom:8px;">Credit Alert</div>
-                <div style="font-size:12px; color:#374151; line-height:1.9;">Flag if credits &lt; <input type="number" id="th-credit-per-sem" min="1" max="30" value="15" style="width:44px; text-align:center; font-weight:700; color:#c2410c; padding:2px 4px;" oninput="updateThresholdDisplay()"> × semesters</div>
-                <div id="credit-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:4px;">e.g. Year 3 (4 sems): &lt; 60 cr</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+              <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:16px;">
+                <div style="font-size:14px; font-weight:700; color:#92400e; margin-bottom:10px;">Credit Alert</div>
+                <div style="font-size:17px; color:#374151; line-height:1.9;">Flag if credits &lt; <input type="number" id="th-credit-per-sem" min="1" max="30" value="15" style="width:74px; height:42px; text-align:center; font-weight:800; color:#c2410c; font-size:28px; padding:2px 6px; border-radius:20px; border:1px solid #d1d5db;" oninput="updateThresholdDisplay()"> × semesters</div>
+                <div id="credit-threshold-eg" style="font-size:13px; color:#9ca3af; margin-top:6px;">e.g. Year 3 (4 sems): &lt; 60 cr</div>
               </div>
-              <div style="background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:12px;">
-                <div style="font-size:12px; font-weight:600; color:#92400e; margin-bottom:8px;">GPA Drop</div>
-                <div style="font-size:12px; color:#374151; line-height:1.9;">Flag if GPA fell ≥ <input type="number" id="th-gpa-drop" min="0.05" max="2.0" step="0.05" value="0.30" style="width:52px; text-align:center; font-weight:700; color:#a16207; padding:2px 4px;" oninput="updateThresholdDisplay()"> pts</div>
-                <div id="gpa-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:4px;">e.g. 3.20 → 2.90 triggers alert</div>
+              <div style="background:#fefce8; border:1px solid #fde68a; border-radius:10px; padding:16px;">
+                <div style="font-size:14px; font-weight:700; color:#92400e; margin-bottom:10px;">GPA Drop</div>
+                <div style="font-size:17px; color:#374151; line-height:1.9;">Flag if GPA fell ≥ <input type="number" id="th-gpa-drop" min="0.05" max="2.0" step="0.05" value="0.30" style="width:88px; height:42px; text-align:center; font-weight:800; color:#a16207; font-size:28px; padding:2px 6px; border-radius:20px; border:1px solid #d1d5db;" oninput="updateThresholdDisplay()"> pts</div>
+                <div id="gpa-threshold-eg" style="font-size:13px; color:#9ca3af; margin-top:6px;">e.g. 3.20 → 2.90 triggers alert</div>
               </div>
-              <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px;">
-                <div style="font-size:12px; font-weight:600; color:#1e40af; margin-bottom:8px;">No Contact</div>
-                <div style="font-size:12px; color:#374151; line-height:1.9;">Flag if last contact &gt; <input type="number" id="th-no-contact" min="7" max="365" value="90" style="width:52px; text-align:center; font-weight:700; color:#1d4ed8; padding:2px 4px;" oninput="updateThresholdDisplay()"> days</div>
-                <div id="contact-threshold-eg" style="font-size:11px; color:#9ca3af; margin-top:4px;">Currently: 90+ days no contact</div>
+              <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px;">
+                <div style="font-size:14px; font-weight:700; color:#1e40af; margin-bottom:10px;">No Contact</div>
+                <div style="font-size:17px; color:#374151; line-height:1.9;">Flag if last contact &gt; <input type="number" id="th-no-contact" min="7" max="365" value="90" style="width:82px; height:42px; text-align:center; font-weight:800; color:#1d4ed8; font-size:28px; padding:2px 6px; border-radius:20px; border:1px solid #d1d5db;" oninput="updateThresholdDisplay()"> days</div>
+                <div id="contact-threshold-eg" style="font-size:13px; color:#9ca3af; margin-top:6px;">Currently: 90+ days no contact</div>
               </div>
             </div>
           </div>
@@ -672,6 +673,23 @@
   <script>
     /* ── Global API data store ── */
     var _dashData = null;
+
+    function _getAdvisorSessionSchool() {
+      try {
+        var raw = sessionStorage.getItem('cuhksz_user_session');
+        if (!raw) return '';
+        var session = JSON.parse(raw);
+        return String((session && session.school) || '').trim().toLowerCase();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function _studentInAdvisorSchool(student, advisorSchool) {
+      if (!advisorSchool) return true;
+      var school = String((student && student.school) || '').trim().toLowerCase();
+      return school === advisorSchool;
+    }
 
     function toggleSidebar() {
       var app = document.querySelector('.app');
@@ -1562,20 +1580,24 @@
         yearSel.innerHTML += '<option value="' + y + '">' + y + '</option>';
       });
 
-      /* Also update Overview filter dropdowns */
+      /* Also update Overview filter dropdowns — preserve current selection */
       var ovMajor = document.getElementById('filterMajor');
       if (ovMajor) {
+        var prevMajor = ovMajor.value;
         ovMajor.innerHTML = '<option value="all">Major: All</option>';
         Object.keys(majors).sort().forEach(function(m) {
           ovMajor.innerHTML += '<option value="' + m + '">' + m + '</option>';
         });
+        ovMajor.value = prevMajor;
       }
       var ovYear = document.getElementById('filterYear');
       if (ovYear) {
+        var prevYear = ovYear.value;
         ovYear.innerHTML = '<option value="all">Year: All</option>';
         ['Year 1','Year 2','Year 3','Year 4'].filter(function(y){ return years[y]; }).forEach(function(y) {
           ovYear.innerHTML += '<option value="' + y + '">' + y + '</option>';
         });
+        ovYear.value = prevYear;
       }
 
       /* Student table */
@@ -1611,6 +1633,12 @@
       fetch('/api/advising/dashboard')
         .then(function(r) { return r.json(); })
         .then(function(data) {
+          var advisorSchool = _getAdvisorSessionSchool();
+          if (advisorSchool) {
+            data.students = (data.students || []).filter(function(s) {
+              return _studentInAdvisorSchool(s, advisorSchool);
+            });
+          }
           _dashData = data;
           applyOverviewFilter();
         })

@@ -5,7 +5,7 @@ Run:   python3 api_server.py
 Open:  http://localhost:8000
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,6 +119,15 @@ def _semester_sort_key(sem):
     else:
         phase = 3
     return (year_start, phase, text)
+
+def _norm(s):
+    return (str(s or "")).strip().lower()
+
+def _first_present(row, keys):
+    for k in keys:
+        if k in row and row.get(k) is not None:
+            return row.get(k)
+    return None
 
 # ── API routes (must be defined BEFORE static mount) ────────────────
 @app.get("/api/courses")
@@ -525,6 +534,83 @@ def get_advising_dashboard():
             "credit_alert_count": len([s for s in students if "credit" in s["risk_tags"]]),
             "gpa_drop_count": len([s for s in students if "gpa" in s["risk_tags"]]),
             "no_contact_count": len([s for s in students if "contact" in s["risk_tags"]]),
+        }
+    }
+
+@app.get("/api/auth/advisor")
+def auth_advisor(
+    username: str = Query(""),
+    email: str = Query("")
+):
+    """
+    Validate advisor login credentials using ONLY the advisors table.
+    Column names are detected dynamically so this works with schema variants.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT COLUMN_NAME
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'advisors'
+        """)
+        col_rows = cursor.fetchall()
+        advisor_cols = {r["COLUMN_NAME"] for r in col_rows}
+        if not advisor_cols:
+            raise HTTPException(status_code=500, detail="advisors table not found")
+
+        select_cols = ", ".join(f"`{c}`" for c in sorted(advisor_cols))
+
+        email_col = None
+        for c in ("email", "advisor_email", "campus_email"):
+            if c in advisor_cols:
+                email_col = c
+                break
+        if not email_col:
+            raise HTTPException(status_code=500, detail="No email column found in advisors table")
+
+        cursor.execute(
+            f"SELECT {select_cols} FROM advisors WHERE LOWER(TRIM(`{email_col}`)) = %s",
+            (_norm(email),)
+        )
+        advisors = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {e}")
+
+    norm_username = _norm(username)
+    norm_email = _norm(email)
+
+    matched = None
+    for row in advisors:
+        if _norm(row.get("email")) != norm_email:
+            continue
+        if norm_username and _norm(row.get("username")) != norm_username:
+            continue
+        matched = row
+        break
+
+    if not matched:
+        return {"ok": False}
+
+    school_name = str(matched.get("department") or "").strip()
+    advisor_name = str(matched.get("username") or "").strip()
+    advisor_email = str(matched.get("email") or "").strip()
+    advisor_id = str(matched.get("advisor_id") or "").strip()
+
+    return {
+        "ok": True,
+        "advisor": {
+            "advisor_id": advisor_id,
+            "full_name": advisor_name,
+            "email": advisor_email,
+            "school": school_name
         }
     }
 
