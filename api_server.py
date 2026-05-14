@@ -615,6 +615,85 @@ def auth_advisor(
     }
 
 
+@app.get("/api/auth/student")
+def auth_student(
+    username: str = Query(""),
+    email: str = Query("")
+):
+    """
+    Validate student login credentials using ONLY the students table.
+    Column names are detected dynamically so this works with schema variants.
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT COLUMN_NAME
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'students'
+        """)
+        col_rows = cursor.fetchall()
+        student_cols = {r["COLUMN_NAME"] for r in col_rows}
+        if not student_cols:
+            raise HTTPException(status_code=500, detail="students table not found")
+
+        select_cols = ", ".join(f"`{c}`" for c in sorted(student_cols))
+
+        email_col = None
+        for c in ("email", "student_email", "campus_email"):
+            if c in student_cols:
+                email_col = c
+                break
+        if not email_col:
+            raise HTTPException(status_code=500, detail="No email column found in students table")
+
+        username_col = None
+        for c in ("username", "full_name", "name", "student_name"):
+            if c in student_cols:
+                username_col = c
+                break
+        if not username_col:
+            raise HTTPException(status_code=500, detail="No username column found in students table")
+
+        cursor.execute(
+            f"SELECT {select_cols} FROM students WHERE LOWER(TRIM(`{email_col}`)) = %s",
+            (_norm(email),)
+        )
+        students = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {e}")
+
+    norm_username = _norm(username)
+    norm_email = _norm(email)
+
+    matched = None
+    for row in students:
+        if _norm(row.get(email_col)) != norm_email:
+            continue
+        if norm_username and _norm(row.get(username_col)) != norm_username:
+            continue
+        matched = row
+        break
+
+    if not matched:
+        return {"ok": False}
+
+    return {
+        "ok": True,
+        "student": {
+            "full_name": str(matched.get(username_col) or "").strip(),
+            "email": str(matched.get(email_col) or "").strip()
+        }
+    }
+
+
 @app.get("/health")
 def health():
     try:

@@ -1,10 +1,20 @@
 import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { User, Mail, LogIn } from 'lucide-react';
 import loginLogo from '../../assets/Image_20260513001106_704_33.png';
 
 // ── TEST MODE: Set to true to bypass credential validation ──
 const SKIP_CREDENTIALS = false;
+const ALLOWED_ADVISORS = {
+  minghua: 'minghua@cuhk.edu.cn',
+  chenzizhong: 'chenzizhong@cuhk.edu.cn',
+  mihabresar: 'mihabresar@cuhk.edu.cn',
+  xiaoqiangcai: 'xiaoqiangcai@cuhk.edu.cn',
+  bohui: 'bohui@cuhk.edu.cn',
+  ruishen: 'ruishen@cuhk.edu.cn',
+  jianminjia: 'jianminjia@cuhk.edu.cn',
+  kanyuanhuang: 'kanyuanhuang@cuhk.edu.cn',
+};
 
 export default function App() {
   const [role, setRole] = useState('student');
@@ -13,6 +23,8 @@ export default function App() {
   const [showEmailDropdown, setShowEmailDropdown] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [advisorError, setAdvisorError] = useState('');
+  const [advisorSchool, setAdvisorSchool] = useState(null);
+  const [credentialsOk, setCredentialsOk] = useState(SKIP_CREDENTIALS);
   const emailInputRef = useRef(null);
 
   const emailRule = useMemo(() => {
@@ -23,34 +35,40 @@ export default function App() {
 
   const emailValid = SKIP_CREDENTIALS || email.toLowerCase().endsWith(emailRule.suffix);
   const nameValid = SKIP_CREDENTIALS || fullName.trim();
+  const readyToVerify = SKIP_CREDENTIALS || Boolean(fullName.trim() && emailValid);
+  const submitDisabled = authBusy || !credentialsOk;
+
+  useEffect(() => {
+    if (SKIP_CREDENTIALS) {
+      setCredentialsOk(true);
+      setAdvisorError('');
+      return undefined;
+    }
+
+    setAdvisorError('');
+    setAdvisorSchool(null);
+    if (!readyToVerify) {
+      setCredentialsOk(false);
+      return undefined;
+    }
+
+    if (role === 'advisor') {
+      const usernameKey = fullName.trim().toLowerCase();
+      const matchedEmail = ALLOWED_ADVISORS[usernameKey];
+      const ok = Boolean(matchedEmail && matchedEmail === email.trim().toLowerCase());
+      setCredentialsOk(ok);
+      setAdvisorError(ok ? '' : 'Advisor credentials not in allowlist.');
+      return undefined;
+    }
+
+    setCredentialsOk(true);
+    return undefined;
+  }, [role, fullName, email, emailValid, readyToVerify]);
 
   async function onSubmit(e) {
     e.preventDefault();
     setAdvisorError('');
-    if (!nameValid || !emailValid) return;
-
-    let advisorSchool = null;
-    if (!SKIP_CREDENTIALS && role === 'advisor') {
-      try {
-        setAuthBusy(true);
-        const qs = new URLSearchParams({
-          username: fullName.trim(),
-          email: email.trim(),
-        });
-        const resp = await fetch(`/api/auth/advisor?${qs.toString()}`);
-        const data = await resp.json();
-        if (!resp.ok || !data.ok) {
-          setAdvisorError('Advisor credentials not found in advisor table.');
-          return;
-        }
-        advisorSchool = data?.advisor?.school || null;
-      } catch (err) {
-        setAdvisorError('Unable to validate advisor credentials.');
-        return;
-      } finally {
-        setAuthBusy(false);
-      }
-    }
+    if (!nameValid || !emailValid || !credentialsOk || authBusy) return;
 
     const session = {
       role,
@@ -240,9 +258,9 @@ export default function App() {
               <small className="hint error">{advisorError}</small>
             )}
 
-            <button type="submit" disabled={authBusy || (SKIP_CREDENTIALS ? false : (!fullName.trim() || !emailValid))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <button type="submit" disabled={submitDisabled} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <LogIn size={18} />
-              {authBusy ? 'Checking advisor credentials…' : 'Continue with CUHK SSO'}
+              {authBusy ? 'Checking credentials…' : 'Continue with CUHK SSO'}
             </button>
           </form>
         </div>

@@ -150,6 +150,9 @@ html, body, #root { margin: 0; height: 100%; }
 }
 
 .auth-form button:disabled {
-  opacity: 0.6;
+  opacity: 1;
+  background: #9ca3af;
+  color: #f3f4f6;
+  box-shadow: none;
   cursor: not-allowed;
 }
