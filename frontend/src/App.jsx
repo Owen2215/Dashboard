@@ -20,7 +20,7 @@ export default function App() {
   const emailRule = useMemo(() => {
     return role === 'student'
       ? { suffix: '@link.cuhk.edu.cn', next: '/students-interface/student_dashboard_index.html' }
-      : { suffix: '@cuhk.edu.cn', next: '/aa_dashboard.html' };
+      : { suffix: '@cuhk.edu.cn', next: '/aa_dashboard_v2.html' };
   }, [role]);
 
   const emailValid = SKIP_CREDENTIALS || email.toLowerCase().endsWith(emailRule.suffix);

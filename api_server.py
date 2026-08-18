@@ -802,6 +802,10 @@ def serve_student():
 def serve_aa():
     return FileResponse(os.path.join(BASE_DIR, "aa_dashboard.html"), headers=NO_CACHE)
 
+@app.get("/aa_dashboard_v2.html")
+def serve_aa_v2():
+    return FileResponse(os.path.join(BASE_DIR, "aa_dashboard_v2.html"), headers=NO_CACHE)
+
 @app.get("/app")
 def serve_react_app_root():
     index_file = os.path.join(FRONTEND_DIST_DIR, "index.html")
