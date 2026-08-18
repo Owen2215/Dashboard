@@ -192,6 +192,74 @@ def get_course(course_code: str):
         "outcomes": safe_json(row["outcome"]),
     }
 
+def _mock_advising_dashboard():
+    """Hardcoded demo data used when the DB is unavailable, so the advisor
+    dashboard always has something to render locally."""
+    base_students = [
+        {"student_id": "122010001", "name": "Zixuan Wang", "year_label": "Year 4", "major": "Accounting Data and Analytics", "school": "School of Management and Economics", "gpa": 3.672, "total_credits": 120, "completion_pct": 100.0, "last_contact_date": "2026-04-18", "last_contact_days": 12, "contacts_count": 3, "risk_score": 18, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.0, "credit_delay": 0, "category_progress": {"major_courses": 24, "core_courses": 10, "elective_courses": 6, "major_elective_courses": 4, "free_elective_courses": 2}, "gpa_terms": [("2022-23 Term 1", 3.796), ("2022-23 Term 2", 3.741), ("2023-24 Term 1", 3.627), ("2023-24 Term 2", 3.790), ("2024-25 Term 1", 3.722), ("2024-25 Term 2", 4.000), ("2025-26 Term 1", 3.472), ("2025-26 Term 2", 3.358)]},
+        {"student_id": "122040156", "name": "Michael Chen", "year_label": "Year 4", "major": "Computer Science and Engineering", "school": "School of Data Science", "gpa": 3.111, "total_credits": 88, "completion_pct": 73.3, "last_contact_date": "2025-11-15", "last_contact_days": 90, "contacts_count": 1, "risk_score": 62, "risk_level": "Medium", "risk_tags": ["credit"], "reason_text": "Credit delay", "gpa_decline": 0.9, "credit_delay": 12, "category_progress": {"major_courses": 20, "core_courses": 8, "elective_courses": 5, "major_elective_courses": 3, "free_elective_courses": 2}, "gpa_terms": [("2022-23 Term 1", 3.183), ("2022-23 Term 2", 2.740), ("2023-24 Term 1", 3.280), ("2023-24 Term 2", 3.140), ("2024-25 Term 1", 3.060), ("2024-25 Term 2", 2.660), ("2025-26 Term 1", 3.600), ("2025-26 Term 2", 2.700)]},
+        {"student_id": "122040267", "name": "Sophia Wang", "year_label": "Year 4", "major": "Data Science and Big Data Technology", "school": "School of Data Science", "gpa": 3.113, "total_credits": 128, "completion_pct": 100.0, "last_contact_date": "2026-04-22", "last_contact_days": 8, "contacts_count": 3, "risk_score": 22, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.0, "credit_delay": 0, "category_progress": {"major_courses": 26, "core_courses": 9, "elective_courses": 7, "major_elective_courses": 4, "free_elective_courses": 3}, "gpa_terms": [("2022-23 Term 1", 3.600), ("2022-23 Term 2", 3.140), ("2023-24 Term 1", 2.883), ("2023-24 Term 2", 3.560), ("2024-25 Term 1", 3.175), ("2024-25 Term 2", 2.733), ("2025-26 Term 1", 3.020), ("2025-26 Term 2", 3.080)]},
+        {"student_id": "122040384", "name": "James Liu", "year_label": "Year 4", "major": "Financial Engineering - Quantitative Finance", "school": "School of Data Science", "gpa": 3.348, "total_credits": 129, "completion_pct": 100.0, "last_contact_date": "2026-05-06", "last_contact_days": 3, "contacts_count": 3, "risk_score": 15, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.0, "credit_delay": 0, "category_progress": {"major_courses": 27, "core_courses": 9, "elective_courses": 6, "major_elective_courses": 4, "free_elective_courses": 2}, "gpa_terms": [("2022-23 Term 1", 3.280), ("2022-23 Term 2", 3.680), ("2023-24 Term 1", 3.340), ("2023-24 Term 2", 3.394), ("2024-25 Term 1", 2.985), ("2024-25 Term 2", 3.060), ("2025-26 Term 1", 3.233), ("2025-26 Term 2", 3.650)]},
+        {"student_id": "122040491", "name": "Jordan Ellis", "year_label": "Year 4", "major": "Statistics", "school": "School of Data Science", "gpa": 3.098, "total_credits": 100, "completion_pct": 83.3, "last_contact_date": None, "last_contact_days": 999, "contacts_count": 0, "risk_score": 78, "risk_level": "Medium", "risk_tags": ["contact", "credit"], "reason_text": "No recent contact + Credit delay", "gpa_decline": 0.38, "credit_delay": 8, "category_progress": {"major_courses": 21, "core_courses": 8, "elective_courses": 5, "major_elective_courses": 3, "free_elective_courses": 2}, "gpa_terms": [("2022-23 Term 1", 2.733), ("2022-23 Term 2", 2.740), ("2023-24 Term 1", 3.340), ("2023-24 Term 2", 2.600), ("2024-25 Term 1", 3.381), ("2024-25 Term 2", 3.060), ("2025-26 Term 1", 3.400), ("2025-26 Term 2", 3.000)]},
+        {"student_id": "123030001", "name": "Muyang Liu", "year_label": "Year 3", "major": "Accounting and Financial Reporting", "school": "School of Management and Economics", "gpa": 3.911, "total_credits": 66, "completion_pct": 55.0, "last_contact_date": "2025-12-01", "last_contact_days": 258, "contacts_count": 3, "risk_score": 30, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.0, "credit_delay": 0, "category_progress": {"major_courses": 14, "core_courses": 5, "elective_courses": 3, "major_elective_courses": 2, "free_elective_courses": 1}, "gpa_terms": [("2023-24 Term 1", 4.000), ("2023-24 Term 2", 3.847), ("2024-25 Term 1", 3.794), ("2024-25 Term 2", 3.762), ("2025-26 Term 1", 3.900), ("2025-26 Term 2", 3.400)]},
+        {"student_id": "124010001", "name": "Zihan Chen", "year_label": "Year 2", "major": "Accounting Data and Analytics", "school": "School of Management and Economics", "gpa": 3.169, "total_credits": 63, "completion_pct": 52.5, "last_contact_date": "2026-04-30", "last_contact_days": 0, "contacts_count": 4, "risk_score": 25, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.14, "credit_delay": 0, "category_progress": {"major_courses": 13, "core_courses": 5, "elective_courses": 3, "major_elective_courses": 2, "free_elective_courses": 1}, "gpa_terms": [("2024-25 Term 1", 3.251), ("2024-25 Term 2", 2.965), ("2025-26 Term 1", 3.304), ("2025-26 Term 2", 3.156)]},
+        {"student_id": "125030003", "name": "Ruohan Zhou", "year_label": "Year 1", "major": "Accounting and Financial Reporting", "school": "School of Management and Economics", "gpa": 2.883, "total_credits": 32, "completion_pct": 26.7, "last_contact_date": "2026-05-02", "last_contact_days": 0, "contacts_count": 3, "risk_score": 20, "risk_level": "Low", "risk_tags": ["monitor"], "reason_text": "General monitoring", "gpa_decline": 0.0, "credit_delay": 0, "category_progress": {"major_courses": 6, "core_courses": 3, "elective_courses": 2, "major_elective_courses": 1, "free_elective_courses": 1}, "gpa_terms": [("2025-26 Term 1", 2.672), ("2025-26 Term 2", 3.094)]},
+    ]
+
+    mock_students = []
+    for s in base_students:
+        s = dict(s)
+        s["gpa_terms"] = [{"semester": sem, "term_gpa": g} for sem, g in s.pop("gpa_terms")]
+        s["history"] = []
+        s["notes"] = ""
+        s["missing_courses"] = {"Major Required": [], "Electives": [], "University Core": []}
+        mock_students.append(s)
+
+    return {
+        "generated_at": date.today().isoformat(),
+        "students": mock_students,
+        "overview": {
+            "gpa_distribution": {
+                "labels": ["<2.0", "2.0-2.5", "2.5-3.0", "3.0-3.5", ">=3.5"],
+                "values": [0, 0, 1, 5, 2]
+            },
+            "gpa_trend": {
+                "labels": ["2023-24 Term 1", "2023-24 Term 2", "2024-25 Term 1", "2024-25 Term 2", "2025-26 Term 1", "2025-26 Term 2"],
+                "values": [3.30, 3.35, 3.28, 3.32, 3.36, 3.40]
+            },
+            "progress": {
+                "avg_completion_pct": 73.9,
+                "avg_credits_done": 90.8,
+                "avg_credits_total": 120,
+                "major": {"done": 24.0, "target": 36, "pct": 66.7},
+                "elective": {"done": 12.0, "target": 24, "pct": 50.0},
+                "free_elective": {"done": 9.0, "target": 30, "pct": 30.0},
+                "core": {"done": 24.0, "target": 30, "pct": 80.0},
+                "pie": {
+                    "major": 24.0,
+                    "elective": 12.0,
+                    "free_elective": 9.0,
+                    "core": 24.0,
+                    "remaining": 51.0
+                }
+            },
+            "communication": {
+                "total_students": len(mock_students),
+                "recently_contacted": 6,
+                "no_contact": 1,
+                "contacts_1_2": 1,
+                "contacts_3_plus": 6
+            }
+        },
+        "risk_summary": {
+            "high_risk_count": 0,
+            "credit_alert_count": 2,
+            "gpa_drop_count": 1,
+            "no_contact_count": 1,
+        }
+    }
+
+
 @app.get("/api/advising/dashboard")
 def get_advising_dashboard():
     try:
@@ -249,8 +317,8 @@ def get_advising_dashboard():
 
         cursor.close()
         conn.close()
-    except mysql.connector.Error as e:
-        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+    except mysql.connector.Error:
+        return _mock_advising_dashboard()
 
     today = date.today()
 

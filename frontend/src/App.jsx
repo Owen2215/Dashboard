@@ -5,16 +5,6 @@ import loginLogo from '../../assets/Image_20260513001106_704_33.png';
 
 // ── TEST MODE: Set to true to bypass credential validation ──
 const SKIP_CREDENTIALS = false;
-const ALLOWED_ADVISORS = {
-  minghua: 'minghua@cuhk.edu.cn',
-  chenzizhong: 'chenzizhong@cuhk.edu.cn',
-  mihabresar: 'mihabresar@cuhk.edu.cn',
-  xiaoqiangcai: 'xiaoqiangcai@cuhk.edu.cn',
-  bohui: 'bohui@cuhk.edu.cn',
-  ruishen: 'ruishen@cuhk.edu.cn',
-  jianminjia: 'jianminjia@cuhk.edu.cn',
-  kanyuanhuang: 'kanyuanhuang@cuhk.edu.cn',
-};
 
 export default function App() {
   const [role, setRole] = useState('student');
@@ -49,15 +39,6 @@ export default function App() {
     setAdvisorSchool(null);
     if (!readyToVerify) {
       setCredentialsOk(false);
-      return undefined;
-    }
-
-    if (role === 'advisor') {
-      const usernameKey = fullName.trim().toLowerCase();
-      const matchedEmail = ALLOWED_ADVISORS[usernameKey];
-      const ok = Boolean(matchedEmail && matchedEmail === email.trim().toLowerCase());
-      setCredentialsOk(ok);
-      setAdvisorError(ok ? '' : 'Advisor credentials not in allowlist.');
       return undefined;
     }
 
