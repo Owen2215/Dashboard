@@ -1,5 +1,5 @@
 [build]
-  command = "npm run frontend:build && cp aa_dashboard.html frontend/dist/aa_dashboard.html && cp -R students-interface frontend/dist/students-interface && cp students-interface/student_dashboard_index.html frontend/dist/student_dashboard.html && cp assets/favicon.svg frontend/dist/assets/favicon.svg"
+  command = "npm run frontend:build && cp aa_dashboard.html frontend/dist/aa_dashboard.html && cp aa_dashboard_v2.html frontend/dist/aa_dashboard_v2.html && cp -R students-interface frontend/dist/students-interface && cp students-interface/student_dashboard_index.html frontend/dist/student_dashboard.html && cp assets/favicon.svg frontend/dist/assets/favicon.svg"
   publish = "frontend/dist"
 
 [build.environment]
@@ -17,7 +17,7 @@
 
 [[redirects]]
   from = "/aa_dashboard_v2.html"
-  to = "/aa_dashboard.html"
+  to = "/aa_dashboard_v2.html"
   status = 200
 
 [[redirects]]
